@@ -75,6 +75,8 @@ Lo transversal a ambos proyectos (germen del `CLAUDE.md` raíz del futuro monore
 
 - **Comportamiento (guidelines Karpathy):** pensar antes de codear (desglosar el problema, plantear hipótesis, simular); **simplicidad primero** (código mínimo, sin abstracciones especulativas); **cambios quirúrgicos** (tocar solo lo necesario, respetar el estilo existente, no refactorear lo que no está roto); ejecución dirigida a **objetivos verificables** (criterios de éxito → loop hasta cumplir).
 - **Commits / tests / docs:** ver §4, §7 y §8 — idénticos en ambos proyectos.
+- **Precedencia normativa (ADR 0020):** las normas son **acumulativas** — aquí rigen las de este repo y, adicionalmente, las de Kaoru. Ante contradicción **prevalece la norma preexistente de Kaoru**, y solo en **proceso y gobernanza** (commits, ramas, pruebas, docs, secretos, versionado, promoción de ambientes, conducta del agente). **No alcanza al stack ni a la arquitectura** (§1–§2, ADR 0001–0002, no negociables): eso exige ADR propio. Y **nunca relaja una norma más estricta de axonbim** — p. ej. §5, cuyo remoto es público frente al privado de Kaoru.
+- **De Kaoru, sin equivalente previo aquí:** `localhost` es el destino por defecto y **no se propone ni ejecuta despliegue a servidor alguno** sin orden explícita del dueño.
 
 > Lo Kaoru-específico (las de su stack y su operación) **no aplica a axonbim**.
 

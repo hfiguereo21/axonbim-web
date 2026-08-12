@@ -15,6 +15,7 @@ alwaysApply: true
 8. Si el pedido contradice arquitectura o MVP, **señálalo** antes de implementar.
 9. Si código, tests, docs o ADR discrepan, **identifica la discrepancia** antes de un cambio arquitectónico.
 10. Documentación permanente nueva/movida/eliminada → **actualiza el índice** en `AGENTS.md` en la misma tarea.
+11. **Precedencia normativa (ADR 0020):** normas acumulativas (las de este repo + las de Kaoru). Ante contradicción prevalece la **preexistente de Kaoru**, solo en **proceso y gobernanza**; el stack y la arquitectura se rigen por §1–§2 y ADR 0001–0002, y cambiarlos exige ADR propio. Nunca relaja una norma más estricta de axonbim (§5: remoto público). Consecuencia directa: **no proponer ni ejecutar despliegues** a servidores; `localhost` por defecto.
 
 Lee: `docs/decisions/0006-controlled-agent-changes.md`, `docs/product/mvp-scope.md`.
 

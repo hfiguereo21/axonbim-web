@@ -21,3 +21,4 @@
 | [0017](0017-domain-invariants-in-commands.md) | Invariantes del documento en dominio (**F9-E cerrada** E1–E6) |
 | [0018](0018-wall-vertical-profile.md) | Perfil vertical persistente de muro (`SK-wall-profile-v1` cerrado; `.axon` v2) |
 | [0019](0019-kaoru-branch-flow.md) | Flujo de ramas Kaoru (supersede «solo main» de 0006) |
+| [0020](0020-rule-precedence-kaoru.md) | Precedencia normativa Kaoru↔AxonBIM (proceso sí, arquitectura no) |
