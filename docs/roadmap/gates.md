@@ -12,6 +12,8 @@ El agente y el desarrollo humano **se detienen** en cada gate. “Continúa con 
 | **G-E1** | Primer muro | ¿Corte vertical usable? | Autorizas MVP estricto |
 | **G-MVP** | MVP estricto | ¿Sensación de dibujo, claridad, utilidad? | Autorizas post-MVP (puertas/etc.) |
 | **F5-S** | Estabilización IDs/historial/`.axon` | ¿Regresiones cerradas y uso manual OK? | Autorizas Playwright u otra cola |
+| **G-GIT** | Gobernanza Git (ADR 0019/0023) | ¿La protección de `main` está **activa y verificada** con un PR que demuestre que los checks bloquean el merge? | Autorizas cortar releases |
+| **G-REL** | Release | ¿Requisitos previos de `releases.md` cumplidos **sobre el SHA objetivo**? | Autorizas publicar el tag |
 
 ## Estado actual
 
@@ -30,7 +32,10 @@ El agente y el desarrollo humano **se detienen** en cada gate. “Continúa con 
 - **C3 crop cámara:** **cerrada** 2026-08-09
 - **Auditoría externa:** `docs/validation/external-audit-2026-08-08.md` — base arquitectónica aprobada
 - **Pendientes (prioridad):** **`pending-work.md`**
-- **GitHub:** https://github.com/hfiguereo/axonbim-web (público + branch protection)
+- **GitHub:** https://github.com/hfiguereo21/axonbim-web (público). **Sin branch protection**: la API responde
+  `Branch not protected` (verificado 2026-08-12). El remoto anterior `hfiguereo/axonbim-web` quedó como `old-origin`.
+- **G-GIT:** **abierto** — la protección no está activa; ver `releases.md`
+- **G-REL:** **abierto** — no existe ningún tag; la primera línea base `v0.1.0` requiere este gate
 
 ## Registro de aprobación
 

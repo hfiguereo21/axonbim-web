@@ -17,6 +17,8 @@
     "check:layers": "node scripts/check-layer-purity.mjs",
     "check:coverage": "node scripts/check-workspace-coverage.mjs",
     "check:guards": "node scripts/check-guards-fire.mjs",
+    "version:show": "node scripts/version.mjs",
+    "version:check": "node scripts/version.mjs --strict",
     "check:history": "node scripts/check-main-fast-forward.mjs",
     "test:e2e": "playwright test",
     "test:e2e:update": "playwright test --update-snapshots",
