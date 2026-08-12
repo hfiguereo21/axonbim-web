@@ -65,6 +65,9 @@ jobs:
       - name: Domain and viewer layer purity
         run: pnpm check:layers
 
+      - name: Every workspace member is covered by the checks
+        run: pnpm check:coverage
+
       - name: Typecheck
         run: pnpm typecheck
 

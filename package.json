@@ -15,6 +15,7 @@
     "check:docs": "node scripts/check-docs-indexed.mjs",
     "check:links": "node scripts/check-markdown-links.mjs",
     "check:layers": "node scripts/check-layer-purity.mjs",
+    "check:coverage": "node scripts/check-workspace-coverage.mjs",
     "check:history": "node scripts/check-main-fast-forward.mjs",
     "test:e2e": "playwright test",
     "test:e2e:update": "playwright test --update-snapshots",
