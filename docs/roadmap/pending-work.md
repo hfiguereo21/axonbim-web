@@ -21,12 +21,16 @@ prerrequisito. Cada bloque = frase explícita en chat + gate.
 ```
 LR0–LR3 + WP + SK-* + SK-profile-one + SK-wall-profile-v1
   → SK-R1 rechazo explicable
-  → SK-R2 ADR sustrato de edición  → SK-R3 sesión compartida
-       → SK-R4 trazado incremental
-       → LR1-C snaps geométricos
-       → SK-R5 parámetros de operación
-  → losas/terreno/barridos u Edit Mode (auth)
+  → SK-R2 ADR sustrato de edición
+  → SK-R3 sesión de edición compartida
+  → SK-R4 trazado incremental
+  → LR1-C snaps geométricos
+  → SK-R5 parámetros de operación
+  → losas / terreno / barridos u Edit Mode (auth)
   ↘ LR3-D → LR4… (parked)
+
+Una sola secuencia. Un bloque abierto a la vez: se cierra con su gate antes de abrir
+el siguiente. Nada de hilos en paralelo.
 ```
 
 | Orden | Bloque | Estado | Gate de cierre |
@@ -48,8 +52,8 @@ LR0–LR3 + WP + SK-* + SK-profile-one + SK-wall-profile-v1
 | **2** | **SK-R2** ADR del sustrato de edición | auth | Decisión escrita: dibujo · transformación · snap · planos como base común |
 | **3** | **SK-R3** Sesión de edición compartida | tras SK-R2 | Una sesión única que consumen todas las funciones, no lógica por función |
 | **4** | **SK-R4** Trazado incremental | tras SK-R3 | Componer contorno arista a arista; hoy ninguna operación añade aristas |
-| **5** | **LR1-C** Snaps geométricos | tras SK-R3 | midpoint · intersección · perpendicular · tangente (hoy: 4 casos) |
-| **6** | **SK-R5** Parámetros de operación | tras SK-R3 | Radio de fillet y distancia de offset dejan de ser constantes |
+| **5** | **LR1-C** Snaps geométricos | tras SK-R4 | midpoint · intersección · perpendicular · tangente (hoy: 4 casos) |
+| **6** | **SK-R5** Parámetros de operación | tras LR1-C | Radio de fillet y distancia de offset dejan de ser constantes |
 | **7** | **Sketch → losas / terreno / barridos** u **Edit Mode** | auth, **tras SK-R3** | Frase explícita; no IFC/OCCT |
 
 ### Parked (no son el hilo actual)
@@ -93,6 +97,15 @@ después. Es la razón de que la fila 7 quede detrás de SK-R3.
 **SK-R2 es una decisión, no código.** El sustrato compartido cambia arquitectura y por eso
 lleva ADR propio antes de tocar geometría. Implementar el perfil primero significaría volver
 a construir sobre piezas sueltas.
+
+**Por qué los snaps (LR1-C) van DESPUÉS del trazado (SK-R4) y no antes.** El propio piloto deja
+como evidencia pendiente *qué tipos de snap hacen falta de verdad para este gesto, medido sobre
+casos reales y no por analogía con CAD*. Construir los snaps sin su consumidor arriesga construir
+los equivocados; con el trazado incremental funcionando, la lista se mide en vez de suponerse.
+
+**Por qué SK-R1 va antes que SK-R2 pese a que SK-R2 es la decisión de fondo.** El canal de rechazo
+viaja de dominio a comando a UI, y eso no lo cambia el sustrato: SK-R1 no se rehace al integrarse.
+El riesgo de reproceso es bajo y el alivio es inmediato.
 
 Family Editor / Push&Pull / LR4+ / IFC / OCCT: parked.
 
