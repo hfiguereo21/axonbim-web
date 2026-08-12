@@ -3,6 +3,12 @@
 **Fuente de verdad** para lo que queda por hacer. Si otro documento contradice este,
 **prevalece este** hasta que se actualice explícitamente.
 
+**Todo trabajo entra aquí, en un único orden.** No sólo el producto: docs, infraestructura,
+gobernanza y deuda técnica comparten esta cola. Antes de empezar algo nuevo hay que decir dónde
+encaja en la secuencia y si desplaza a otra cosa; si es más importante, **se reordena la cola**
+en vez de abrirlo aparte. **Nunca hilos en paralelo** — un PR abierto sin mergear ya es un hilo
+abierto (`CLAUDE.md` §3.3).
+
 Última revisión: **2026-08-12** — **SK-wall-profile-v1 cerrado pero mínimamente funcional**.
 El dueño lo declara insuficiente para producto final; el piloto REF-0 mide por qué y esta cola
 descompone el refactor en fases. Siguiente hilo: **SK-R1…SK-R5**, y solo después

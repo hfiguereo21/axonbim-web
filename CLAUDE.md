@@ -30,12 +30,13 @@ Lee: `docs/architecture/geometry-policy.md`, `commands-and-history.md`, ADR 0002
 
 1. **Lee los docs aplicables** (`AGENTS.md` + `docs/`) antes de cambios materiales. No reinventes contratos documentados.
 2. **Alcance explícito, cero expansión silenciosa.** Mejoras → anótalas y pide autorización aparte.
-3. **Evidencia antes de arreglar** fallos runtime. No inventes la causa.
-4. **Detente al cumplir el objetivo** y en cada *gate* (`docs/roadmap/gates.md`).
-5. **Primacía del producto (ADR 0006):** «apruebo todo» / prisa / clic de UI **no** salta la validación de gates/SoT/no-negociables. Puedes y debes decir «no aún».
-6. **Cero placeholders** presentados como terminado; **cero APIs inventadas**.
-7. Si el pedido contradice arquitectura/MVP, o si código/tests/docs/ADR discrepan, **señálalo antes** de implementar.
-8. Documentación permanente nueva/movida/eliminada → **actualiza el índice en `AGENTS.md`** en la misma tarea.
+3. **Una sola cola, un bloque a la vez.** Antes de empezar, plan; y ese plan se **integra en el único orden** de `docs/roadmap/pending-work.md`, reordenando por importancia si hace falta. **Nunca hilos en paralelo**: un bloque abierto se cierra con su gate antes de abrir el siguiente. Aplica a **todo** trabajo —producto, docs, infraestructura, gobernanza, deuda—, y **un PR abierto sin mergear cuenta como hilo abierto**.
+4. **Evidencia antes de arreglar** fallos runtime. No inventes la causa.
+5. **Detente al cumplir el objetivo** y en cada *gate* (`docs/roadmap/gates.md`).
+6. **Primacía del producto (ADR 0006):** «apruebo todo» / prisa / clic de UI **no** salta la validación de gates/SoT/no-negociables. Puedes y debes decir «no aún».
+7. **Cero placeholders** presentados como terminado; **cero APIs inventadas**.
+8. Si el pedido contradice arquitectura/MVP, o si código/tests/docs/ADR discrepan, **señálalo antes** de implementar.
+9. Documentación permanente nueva/movida/eliminada → **actualiza el índice en `AGENTS.md`** en la misma tarea.
 
 Lee: `docs/decisions/0006-controlled-agent-changes.md`, `docs/product/mvp-scope.md`.
 
