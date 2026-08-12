@@ -588,7 +588,7 @@ export function Ribbon() {
                 tips={tips}
                 icon="move"
                 label="Mover"
-                tip="Mover perfil provisional (Workplane + snap)"
+                tip="Mover arista/vértice seleccionado o bucle (también: arrastrar arista)"
                 active={sketchModifyMode === "move"}
                 onClick={() => setSketchModifyMode("move")}
               />

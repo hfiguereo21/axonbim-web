@@ -84,12 +84,13 @@ function edgeEndpoints(
 
 /**
  * Hit-test world pick against profile edges (closest point on segment in 3D).
+ * Default tol is wider than vertex hit so long sides stay pickable in alzado/3D.
  * @returns edge index in walk order, or -1
  */
 export function hitProfileEdge(
   profile: SketchProfile,
   world: SketchPoint,
-  tol = SNAP_TOLERANCE * 3,
+  tol = SNAP_TOLERANCE * 5,
 ): number {
   const verts = profileVertices(profile);
   const edgeCount = profile.closed ? verts.length : Math.max(0, verts.length - 1);
@@ -105,6 +106,21 @@ export function hitProfileEdge(
     }
   }
   return best;
+}
+
+/** Midpoint of edge `edgeIndex` in walk order, or null if out of range. */
+export function profileEdgeMidpoint(
+  profile: SketchProfile,
+  edgeIndex: number,
+): SketchPoint | null {
+  const verts = profileVertices(profile);
+  const ends = edgeEndpoints(verts, edgeIndex, profile.closed);
+  if (!ends) return null;
+  return {
+    x: (ends.a.x + ends.b.x) * 0.5,
+    y: (ends.a.y + ends.b.y) * 0.5,
+    z: (ends.a.z + ends.b.z) * 0.5,
+  };
 }
 
 /**
@@ -239,6 +255,34 @@ export function splitProfileEdgeByLine(
   for (const ins of inserts) {
     next.splice(ins.after + 1, 0, ins.point);
   }
+  return withMeta(profile, next);
+}
+
+/**
+ * Translate a single edge (both endpoints) by `delta`.
+ * @returns null when `edgeIndex` is out of range.
+ */
+export function translateProfileEdge(
+  profile: SketchProfile,
+  edgeIndex: number,
+  delta: SketchPoint,
+): SketchProfile | null {
+  const verts = profileVertices(profile);
+  const n = verts.length;
+  const edgeCount = profile.closed ? n : Math.max(0, n - 1);
+  if (edgeIndex < 0 || edgeIndex >= edgeCount) return null;
+  const i0 = edgeIndex;
+  const i1 = (edgeIndex + 1) % n;
+  const next = verts.map((p, i) => {
+    if (i === i0 || i === i1) {
+      return {
+        x: p.x + delta.x,
+        y: p.y + delta.y,
+        z: p.z + delta.z,
+      };
+    }
+    return clonePoint(p);
+  });
   return withMeta(profile, next);
 }
 

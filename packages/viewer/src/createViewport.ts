@@ -84,6 +84,7 @@ export type ViewportHandle = {
       axisU: { x: number; y: number; z: number };
       axisV: { x: number; y: number; z: number };
     } | null,
+    selectedEdge?: number | null,
   ) => void;
   setWorkplaneOverlay: (
     corners: [
@@ -100,11 +101,16 @@ export type ViewportHandle = {
     p1: { x: number; y: number; z: number } | null,
     p2: { x: number; y: number; z: number } | null,
   ) => void;
-  /** Snap marker + optional ortho guides while drawing. */
+  /** Snap marker + optional ortho guides while drawing (UV frame on Workplane). */
   setSnapCue: (
     point: { x: number; y: number; z: number } | null,
     kind: "none" | "endpoint" | "ortho" | "close",
     pending?: { x: number; y: number; z: number } | null,
+    frame?: {
+      normal: { x: number; y: number; z: number };
+      axisU: { x: number; y: number; z: number };
+      axisV: { x: number; y: number; z: number };
+    } | null,
   ) => void;
   /** NDC from canvas client coords → world point on storey plane z=elevation */
   pickGround: (

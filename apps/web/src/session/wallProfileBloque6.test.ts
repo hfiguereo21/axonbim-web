@@ -110,6 +110,67 @@ describe("SK-wall-profile-v1 Bloque 6", () => {
     expect(Math.min(...zs)).toBeGreaterThan(0.15);
   });
 
+  it("SK-UX-A: Línea does not append onto closed result seed", () => {
+    useSessionStore.getState().newProject();
+    useSessionStore.getState().setTool("wall");
+    useSessionStore.getState().wallClick({ x: 0, y: 0, z: 0 });
+    useSessionStore.getState().wallClick({ x: 4, y: 0, z: 0 });
+    const wallId = useSessionStore.getState().document.walls[0]!.id;
+    enterFaceSketch(wallId);
+    const edgesBefore = useSessionStore.getState().sketchProfile!.edges.length;
+    useSessionStore.getState().setDrawMode("line");
+    const half = useSessionStore.getState().document.walls[0]!.thickness / 2;
+    useSessionStore.getState().wallClick({ x: 1, y: half, z: 1 });
+    useSessionStore.getState().wallClick({ x: 2, y: half, z: 1.5 });
+    const s = useSessionStore.getState();
+    expect(s.sketchProfile!.edges.length).toBe(edgesBefore);
+    expect(s.status).toMatch(/Redibujar|vértices|Split/i);
+  });
+
+  it("SK-UX-B: select edge and Mover translates that edge only", () => {
+    useSessionStore.getState().newProject();
+    useSessionStore.getState().setTool("wall");
+    useSessionStore.getState().wallClick({ x: 0, y: 0, z: 0 });
+    useSessionStore.getState().wallClick({ x: 4, y: 0, z: 0 });
+    const wallId = useSessionStore.getState().document.walls[0]!.id;
+    enterFaceSketch(wallId);
+    const half = useSessionStore.getState().document.walls[0]!.thickness / 2;
+    useSessionStore.getState().selectProfileEdge(0);
+    expect(useSessionStore.getState().profileEdgeIndex).toBe(0);
+
+    useSessionStore.getState().setSketchModifyMode("move");
+    useSessionStore.getState().setSnapEnabled(false);
+    useSessionStore.getState().wallClick({ x: 0, y: half, z: 0 });
+    useSessionStore.getState().wallClick({ x: 0, y: half, z: 0.4 });
+    expect(useSessionStore.getState().status).toMatch(/Arista 1 movida/i);
+    const zs = useSessionStore
+      .getState()
+      .sketchProfile!.edges.flatMap((e) => [e.p1.z, e.p2.z]);
+    expect(Math.min(...zs)).toBeGreaterThan(0.15);
+  });
+
+  it("SK-UX-B: second click projects selected edge without Mover ribbon", () => {
+    useSessionStore.getState().newProject();
+    useSessionStore.getState().setTool("wall");
+    useSessionStore.getState().wallClick({ x: 0, y: 0, z: 0 });
+    useSessionStore.getState().wallClick({ x: 4, y: 0, z: 0 });
+    const wallId = useSessionStore.getState().document.walls[0]!.id;
+    enterFaceSketch(wallId);
+    const half = useSessionStore.getState().document.walls[0]!.thickness / 2;
+    useSessionStore.getState().setSnapEnabled(false);
+    useSessionStore.getState().setDrawMode("line");
+    // Select bottom edge via mid hit, then place (was clearing selection before).
+    useSessionStore.getState().wallClick({ x: 2, y: half, z: 0.02 });
+    expect(useSessionStore.getState().profileEdgeIndex).toBe(0);
+    useSessionStore.getState().wallClick({ x: 2, y: half, z: 0.5 });
+    expect(useSessionStore.getState().status).toMatch(/proyectada|Arista/i);
+    expect(useSessionStore.getState().profileEdgeIndex).toBeNull();
+    const zs = useSessionStore
+      .getState()
+      .sketchProfile!.edges.flatMap((e) => [e.p1.z, e.p2.z]);
+    expect(Math.min(...zs)).toBeGreaterThan(0.2);
+  });
+
   it("H2: Desfase offsets closed face profile in Workplane UV", () => {
     useSessionStore.getState().newProject();
     useSessionStore.getState().setTool("wall");

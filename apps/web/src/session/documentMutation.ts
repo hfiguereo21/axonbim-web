@@ -15,6 +15,10 @@ const REJECTION_TEXT: Record<string, string> = {
   "wall.length.min": "Muro demasiado corto (mínimo 0,05 m)",
   "wall.family.unknown": "Esa familia de muro no existe en el documento",
   "wall.storey.unknown": "Ese nivel no existe en el documento",
+  "wall.profile.heightLocked":
+    "Altura bloqueada: el muro tiene perfil custom (Restablecer vía Sketch o Redibujar)",
+  "wall.profile.lengthLocked":
+    "Longitud bloqueada: el muro tiene perfil custom (no se puede estirar el eje)",
   "door.family.unknown": "Esa familia de puerta no existe en el documento",
   "window.family.unknown": "Esa familia de ventana no existe en el documento",
   "camera.fov.range": "El campo de visión debe estar entre 10° y 120°",
@@ -23,6 +27,19 @@ const REJECTION_TEXT: Record<string, string> = {
   "opening.endMargin": "Hueco demasiado cerca del extremo del muro",
   "opening.verticalFit": "El hueco no cabe en la altura del muro",
   "opening.overlap": "Hay otro hueco demasiado cerca",
+  "opening.outsideProfile": "El hueco queda fuera del perfil del muro",
+  "opening.wall.mismatch": "El hueco no pertenece a ese muro",
+  "profile.vertexCount": "El perfil necesita al menos 3 vértices",
+  "profile.wallLength": "La longitud del muro es demasiado corta para el perfil",
+  "profile.nonFinite": "El perfil tiene coordenadas no válidas",
+  "profile.u.bounds": "El perfil se sale de los extremos del muro (eje u)",
+  "profile.v.belowBase": "El perfil baja por debajo de la base del muro",
+  "profile.duplicateVertex": "El perfil tiene vértices duplicados consecutivos",
+  "profile.edge.short": "Una arista del perfil es demasiado corta",
+  "profile.selfIntersection": "El perfil se autointersecta",
+  "profile.area": "El perfil tiene área nula o demasiado pequeña",
+  "profile.ends": "El perfil debe alcanzar ambos extremos del muro (u=0 y u=longitud)",
+  "profile.height.min": "La altura máxima del perfil es inferior al mínimo (0,05 m)",
 };
 
 export function rejectionStatus(code: string, message: string): string {

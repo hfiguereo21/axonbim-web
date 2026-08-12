@@ -7,6 +7,7 @@ import {
   type Workplane,
 } from "@axonbim/model";
 import {
+  hitProfileEdge,
   hitProfileVertex,
   profileToPoints,
   profileVertices,
@@ -136,6 +137,9 @@ export function Viewport() {
   const sketchProfile = useSessionStore((s) => s.sketchProfile);
   const sketchTarget = useSessionStore((s) => s.sketchTarget);
   const profileVertexIndex = useSessionStore((s) => s.profileVertexIndex);
+  const profileEdgeIndex = useSessionStore((s) => s.profileEdgeIndex);
+  const sketchModifyMode = useSessionStore((s) => s.sketchModifyMode);
+  const sketchModifyPending = useSessionStore((s) => s.sketchModifyPending);
   const activeWorkplane = useSessionStore((s) => s.activeWorkplane);
   const workplaneLinePending = useSessionStore((s) => s.workplaneLinePending);
   const wallPending = useSessionStore((s) => s.wallPending);
@@ -407,30 +411,40 @@ export function Viewport() {
     vp.setPreviewSegment(null, null);
     vp.setPreviewRect(null, null);
     vp.setPreviewPolyline(null);
+    const frame = activeWorkplane
+      ? {
+          normal: activeWorkplane.normal,
+          axisU: activeWorkplane.axisU,
+          axisV: activeWorkplane.axisV,
+        }
+      : null;
     if (sketchProfile && sketchProfile.edges.length > 0) {
       const pts = profileToPoints(sketchProfile);
       const verts = profileVertices(sketchProfile);
-      const frame = activeWorkplane
-        ? {
-            normal: activeWorkplane.normal,
-            axisU: activeWorkplane.axisU,
-            axisV: activeWorkplane.axisV,
-          }
-        : null;
       vp.setProfilePolyline(
         pts.length >= 2 ? pts : null,
         verts,
         profileVertexIndex,
         frame,
+        profileEdgeIndex,
       );
     } else {
       vp.setProfilePolyline(null);
     }
 
-    // Rebuild previews only when redrawing the profile (rect/arc), not vertex edit.
     const rebuild =
       drawMode === "rectangle" || drawMode === "arcSER" || drawMode === "arcCE";
-    if (activeTool === "wall" && (!sketchProfile || rebuild)) {
+    const modifyGuide =
+      sketchModifyPending &&
+      wallHover &&
+      (sketchModifyMode === "move" ||
+        sketchModifyMode === "copy" ||
+        sketchModifyMode === "rotate" ||
+        sketchModifyMode === "splitLine");
+
+    if (modifyGuide) {
+      vp.setPreviewSegment(sketchModifyPending, wallHover);
+    } else if (activeTool === "wall" && (!sketchProfile || rebuild)) {
       if (drawMode === "rectangle") {
         vp.setPreviewRect(wallPending, wallHover);
       } else if (drawMode === "arcSER" && drawPoints.length >= 1 && wallHover) {
@@ -449,13 +463,24 @@ export function Viewport() {
         }
       } else if (!sketchProfile) {
         vp.setPreviewSegment(wallPending, wallHover);
+      } else if (wallPending && wallHover) {
+        // Open provisional / chaining — show segment even with sketchProfile.
+        vp.setPreviewSegment(wallPending, wallHover);
       }
     }
 
-    if (activeTool === "wall" && wallHover && (!sketchProfile || rebuild)) {
-      vp.setSnapCue(wallHover, lastSnapKind, wallPending ?? drawPoints[drawPoints.length - 1] ?? null);
+    // SK-UX-A: snap cue stays on while editing face profile / Modificar.
+    const pendingCue =
+      sketchModifyPending ??
+      wallPending ??
+      drawPoints[drawPoints.length - 1] ??
+      null;
+    if (activeTool === "wall" && wallHover) {
+      vp.setSnapCue(wallHover, lastSnapKind, pendingCue, frame);
+    } else if (sketchModifyPending) {
+      vp.setSnapCue(sketchModifyPending, "endpoint", null, frame);
     } else {
-      vp.setSnapCue(null, "none", null);
+      vp.setSnapCue(null, "none", null, frame);
     }
   }, [
     wallPending,
@@ -466,6 +491,9 @@ export function Viewport() {
     drawPoints,
     sketchProfile,
     profileVertexIndex,
+    profileEdgeIndex,
+    sketchModifyMode,
+    sketchModifyPending,
     activeWorkplane,
   ]);
 
@@ -501,6 +529,16 @@ export function Viewport() {
         }
         return;
       }
+      if (profileDragging && s.sketchProfile && s.profileEdgeIndex != null) {
+        const vpDrag = handleRef.current;
+        if (!vpDrag) return;
+        const p = pickOnWorkplane(vpDrag, e.clientX, e.clientY, s.activeWorkplane);
+        if (p) {
+          profileDragMoved = true;
+          s.profileEdgeDragTo(p, e.shiftKey);
+        }
+        return;
+      }
       if (
         s.activeTool !== "wall" &&
         s.activeTool !== "camera" &&
@@ -520,10 +558,12 @@ export function Viewport() {
     const onPointerUp = () => {
       if (profileDragging) {
         profileDragging = false;
-        // Click (no move) keeps the vertex selected for a second click-to-place.
-        // Drag-move commits the vertex and clears the grip selection.
+        // Click (no move) keeps the grip selected for a second click-to-place.
+        // Drag-move commits and clears the selection.
         if (profileDragMoved) {
-          useSessionStore.getState().endProfileVertexDrag();
+          const st = useSessionStore.getState();
+          if (st.profileEdgeIndex != null) st.endProfileEdgeDrag();
+          else st.endProfileVertexDrag();
         }
         profileDragMoved = false;
         return;
@@ -588,10 +628,13 @@ export function Viewport() {
             return;
           }
           const hit = hitProfileVertex(s.sketchProfile!, p);
+          const edgeHit = hitProfileEdge(s.sketchProfile!, p);
           const route = routeSketchWallPointer({
             sketchModifyMode: s.sketchModifyMode,
             profileVertexIndex: s.profileVertexIndex,
+            profileEdgeIndex: s.profileEdgeIndex,
             hitVertexIndex: hit,
+            hitEdgeIndex: edgeHit,
             drawMode: s.drawMode,
           });
           if (route === "wallClick") {
@@ -604,8 +647,21 @@ export function Viewport() {
             profileDragMoved = false;
             return;
           }
+          if (route === "profileEdgePlace") {
+            s.profileEdgeClick(p, e.shiftKey);
+            profileDragging = false;
+            profileDragMoved = false;
+            return;
+          }
           if (route === "profileVertexSelect") {
             s.profileVertexClick(p, e.shiftKey);
+            profileDragging = true;
+            profileDragMoved = false;
+            host.setPointerCapture?.(e.pointerId);
+            return;
+          }
+          if (route === "profileEdgeSelect") {
+            s.profileEdgeClick(p, e.shiftKey);
             profileDragging = true;
             profileDragMoved = false;
             host.setPointerCapture?.(e.pointerId);

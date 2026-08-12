@@ -15,7 +15,9 @@ describe("routeSketchWallPointer", () => {
         routeSketchWallPointer({
           sketchModifyMode: mode,
           profileVertexIndex: null,
+          profileEdgeIndex: null,
           hitVertexIndex: 2,
+          hitEdgeIndex: -1,
           drawMode: "line",
         }),
       ).toBe("wallClick");
@@ -27,7 +29,9 @@ describe("routeSketchWallPointer", () => {
       routeSketchWallPointer({
         sketchModifyMode: "vertex",
         profileVertexIndex: null,
+        profileEdgeIndex: null,
         hitVertexIndex: 1,
+        hitEdgeIndex: -1,
         drawMode: "line",
       }),
     ).toBe("profileVertexSelect");
@@ -38,9 +42,37 @@ describe("routeSketchWallPointer", () => {
       routeSketchWallPointer({
         sketchModifyMode: "vertex",
         profileVertexIndex: 0,
+        profileEdgeIndex: null,
         hitVertexIndex: -1,
+        hitEdgeIndex: -1,
         drawMode: "line",
       }),
     ).toBe("profileVertexPlace");
+  });
+
+  it("SK-UX-B: selects edge when no vertex hit", () => {
+    expect(
+      routeSketchWallPointer({
+        sketchModifyMode: "vertex",
+        profileVertexIndex: null,
+        profileEdgeIndex: null,
+        hitVertexIndex: -1,
+        hitEdgeIndex: 2,
+        drawMode: "line",
+      }),
+    ).toBe("profileEdgeSelect");
+  });
+
+  it("SK-UX-B: places selected edge before Línea miss clear", () => {
+    expect(
+      routeSketchWallPointer({
+        sketchModifyMode: "vertex",
+        profileVertexIndex: null,
+        profileEdgeIndex: 1,
+        hitVertexIndex: -1,
+        hitEdgeIndex: -1,
+        drawMode: "line",
+      }),
+    ).toBe("profileEdgePlace");
   });
 });

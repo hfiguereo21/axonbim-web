@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### SK-UX-A/B — feedback, política Dibujar y aristas (2026-08-10)
+
+- **A:** snap cue + guía en UV del Workplane con provisional activo; preview Modificar
+- **A:** Línea/pick no hacen append sobre seed cerrado; Rect/arco solo tras Redibujar
+- **A:** `REJECTION_TEXT` para `profile.*` / locks; Split/Mover reportan no-op
+- **B:** selección de arista (`profileEdgeIndex` + highlight); grips a mitad de segmento
+- **B:** proyectar arista con arrastre o clic 2 (sin ribbon Mover); Mover sigue válido
+- Parada: checklist humana (snap · Línea bloqueada · proyectar arista)
+
 ### H4 — feedback si el clic falla el Workplane (2026-08-10)
 
 - `pickOnWorkplane` null ya no es silencio en sketch / Modificar / muro / trazo WP

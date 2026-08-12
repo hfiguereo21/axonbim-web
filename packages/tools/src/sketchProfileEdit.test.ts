@@ -11,7 +11,9 @@ import {
   rotateProfileAboutAxis,
   splitProfileAtPoint,
   splitProfileEdgeByLine,
+  profileEdgeMidpoint,
   translateProfile,
+  translateProfileEdge,
 } from "./sketchProfileEdit.js";
 
 const z = 0;
@@ -35,6 +37,7 @@ describe("sketchProfileEdit", () => {
     expect(hitProfileEdge(p, { x: 2, y: 0.01, z })).toBe(0);
     expect(hitProfileEdge(p, { x: 4.01, y: 1.5, z })).toBe(1);
     expect(hitProfileEdge(p, { x: 100, y: 100, z })).toBe(-1);
+    expect(profileEdgeMidpoint(p, 0)).toEqual({ x: 2, y: 0, z });
   });
 
   it("splitProfileAtPoint inserts a vertex on an edge", () => {
@@ -90,6 +93,16 @@ describe("sketchProfileEdit", () => {
     const verts = profileVertices(p);
     expect(verts[0]).toEqual({ x: 10, y: -2, z: 1 });
     expect(verts[2]).toEqual({ x: 14, y: 1, z: 1 });
+  });
+
+  it("translateProfileEdge moves only one edge", () => {
+    const next = translateProfileEdge(rect(), 0, { x: 0, y: -1, z: 0 });
+    expect(next).not.toBeNull();
+    const verts = profileVertices(next!);
+    expect(verts[0]).toEqual({ x: 0, y: -1, z });
+    expect(verts[1]).toEqual({ x: 4, y: -1, z });
+    expect(verts[2]).toEqual({ x: 4, y: 3, z });
+    expect(verts[3]).toEqual({ x: 0, y: 3, z });
   });
 
   it("rotateProfile about Z around pivot", () => {

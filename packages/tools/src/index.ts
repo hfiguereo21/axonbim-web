@@ -86,11 +86,13 @@ export {
   hitProfileEdge,
   offsetProfile,
   offsetProfileInPlane,
+  profileEdgeMidpoint,
   rotateProfile,
   rotateProfileAboutAxis,
   splitProfileAtPoint,
   splitProfileEdgeByLine,
   translateProfile,
+  translateProfileEdge,
   type SketchPlaneFrame,
 } from "./sketchProfileEdit.js";
 

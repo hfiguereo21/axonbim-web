@@ -43,6 +43,7 @@ import {
   closerEndpoint,
   collectEndpoints,
   emptySnapSession,
+  hitProfileEdge,
   hitProfileVertex,
   isCameraTool,
   isSketchTool,
@@ -50,6 +51,7 @@ import {
   mapProfilePoints,
   moveProfileVertex,
   paradigmForDrawMode,
+  profileEdgeMidpoint,
   profileFromAxes,
   profileFromClosedRing,
   profileVertices,
@@ -57,6 +59,7 @@ import {
   sampleArcCE,
   sampleArcSER,
   snapWallPoint,
+  translateProfileEdge,
   wallAxesFromPolyline,
   wallAxesFromRectangle,
   type SnapKind,
@@ -68,6 +71,11 @@ import { commitSketchProfile } from "./commitSketchProfile.js";
 import { commitWallAxes } from "./commitWallAxes.js";
 import { rejectionStatus } from "./documentMutation.js";
 import { DEFAULT_CAMERA_EYE_Z, DEFAULT_CAMERA_FOV } from "./sessionTypes.js";
+import {
+  CLOSED_SEED_LINE_STATUS,
+  CLOSED_SEED_REBUILD_STATUS,
+  isClosedResultSeed,
+} from "./sketchProfilePolicy.js";
 import { applyCommand } from "./sliceContracts.js";
 import type { SessionSliceCreator } from "./sliceTypes.js";
 import { wallProfileEditContext } from "./wallProfileViewContext.js";
@@ -300,7 +308,12 @@ function applyGestureAxes(
       set({ status: "Trazo demasiado corto o inválido" });
       return false;
     }
-    // Provisional: Rect/arco replace; Línea siempre añade (no borra el seed).
+    // SK-UX-A: do not append Línea onto a closed result seed (ADR 0018 §11).
+    if (!opts.replace && isClosedResultSeed(s.sketchProfile)) {
+      set({ status: CLOSED_SEED_LINE_STATUS });
+      return false;
+    }
+    // Provisional: Rect/arco replace; Línea añade solo tras Redibujar / seed abierto.
     let next: SketchProfile;
     if (opts.replace) {
       next = profileFromAxes(
@@ -366,6 +379,9 @@ export const createSketchToolSlice: SessionSliceCreator<{
   sketchProfileStroke: boolean;
   /** Selected profile vertex index (`profileVertices`), or null. */
   profileVertexIndex: number | null;
+  /** SK-UX-B — selected edge index in walk order. */
+  profileEdgeIndex: number | null;
+  selectProfileEdge: (edgeIndex: number | null) => void;
   wallChain: boolean;
   activeFamilyId: string;
   wallHeight: number;
@@ -410,6 +426,18 @@ export const createSketchToolSlice: SessionSliceCreator<{
   ) => void;
   /** SK-profile — release vertex grip after drag. */
   endProfileVertexDrag: () => void;
+  /** SK-UX-B — pick/place a perimeter edge (midpoint → click). */
+  profileEdgeClick: (
+    p: { x: number; y: number; z: number },
+    forceOrtho?: boolean,
+  ) => void;
+  /** SK-UX-B — live drag of a selected edge on the Workplane. */
+  profileEdgeDragTo: (
+    p: { x: number; y: number; z: number },
+    forceOrtho?: boolean,
+  ) => void;
+  /** SK-UX-B — release edge grip after drag. */
+  endProfileEdgeDrag: () => void;
   cameraClick: (p: { x: number; y: number; z: number }) => void;
   cancelWallDraw: () => void;
   /** SK-sel — enter Sketch on current selection (Modify button). */
@@ -432,6 +460,7 @@ export const createSketchToolSlice: SessionSliceCreator<{
   sketchProfile: null,
   sketchProfileStroke: false,
   profileVertexIndex: null,
+  profileEdgeIndex: null,
   wallChain: true,
   activeFamilyId: "family.block-150",
   wallHeight: 2.7,
@@ -564,14 +593,50 @@ export const createSketchToolSlice: SessionSliceCreator<{
   setDrawMode: (drawMode) => {
     const s = get();
     const onSelection = s.sketchTarget != null;
+    const rebuild =
+      drawMode === "rectangle" ||
+      drawMode === "arcSER" ||
+      drawMode === "arcCE";
+    if (onSelection && rebuild && isClosedResultSeed(s.sketchProfile)) {
+      set({ status: CLOSED_SEED_REBUILD_STATUS });
+      return;
+    }
     const editingParadigm = onSelection ? "sketch" : paradigmForDrawMode(drawMode);
     set({
       drawMode,
       editingParadigm,
       sketchProfileStroke: false,
       profileVertexIndex: null,
+      profileEdgeIndex: null,
       ...clearDrawGesture(),
       status: drawModeStatus(drawMode, onSelection),
+    });
+  },
+
+  selectProfileEdge: (edgeIndex) => {
+    const s = get();
+    if (!s.sketchTarget || !s.sketchProfile) {
+      set({ status: "Activa Sketch (Editar perfil) para seleccionar una arista" });
+      return;
+    }
+    if (edgeIndex == null) {
+      set({ profileEdgeIndex: null });
+      return;
+    }
+    const edgeCount = s.sketchProfile.closed
+      ? profileVertices(s.sketchProfile).length
+      : Math.max(0, profileVertices(s.sketchProfile).length - 1);
+    if (edgeIndex < 0 || edgeIndex >= edgeCount) {
+      set({ status: "Arista fuera de rango" });
+      return;
+    }
+    set({
+      profileEdgeIndex: edgeIndex,
+      profileVertexIndex: null,
+      sketchModifyMode: "vertex",
+      sketchModifyPending: null,
+      activeTool: "wall",
+      status: `Arista ${edgeIndex + 1} seleccionada — arrastra o clic 2 para proyectar · Terminar confirma`,
     });
   },
 
@@ -739,6 +804,32 @@ export const createSketchToolSlice: SessionSliceCreator<{
       return;
     }
     const s = get();
+    // SK-UX-A: snap feedback while editing face profile / Modificar.
+    if (s.sketchTarget && s.sketchProfile) {
+      const pending =
+        s.sketchModifyPending ??
+        (s.profileVertexIndex != null
+          ? profileVertices(s.sketchProfile)[s.profileVertexIndex] ?? null
+          : s.wallPending);
+      const resolved = resolveSketchEditPoint(
+        {
+          sketchProfile: s.sketchProfile,
+          document: s.document,
+          activeWorkplane: s.activeWorkplane,
+          snapEnabled: s.snapEnabled,
+          snapSession: s.snapSession,
+        },
+        raw,
+        forceOrtho,
+        pending,
+      );
+      set({
+        wallHover: resolved.point,
+        lastSnapKind: resolved.kind,
+        snapSession: resolved.session,
+      });
+      return;
+    }
     if (!s.snapEnabled) {
       set({ wallHover: raw, lastSnapKind: "none", snapSession: clearSnapSession() });
       return;
@@ -784,7 +875,7 @@ export const createSketchToolSlice: SessionSliceCreator<{
       return;
     }
 
-    // SK-provisional: grips if hit/selected; otherwise fall through to Dibujar.
+    // SK-provisional: grips / edges; closed seed blocks Línea append (SK-UX-A).
     if (s.sketchTarget && s.sketchProfile && !isProfileRebuildMode(s.drawMode)) {
       if (s.drawMode === "pickFace") {
         set({ status: "Clic en un muro (modo pick cara)" });
@@ -794,12 +885,30 @@ export const createSketchToolSlice: SessionSliceCreator<{
         get().profileVertexClick(raw, forceOrtho);
         return;
       }
+      // SK-UX-B: place selected edge before Línea/miss clears it.
+      if (s.profileEdgeIndex != null) {
+        get().profileEdgeClick(raw, forceOrtho);
+        return;
+      }
       const pick = ontoSessionWorkplane(s.activeWorkplane, raw);
       if (hitProfileVertex(s.sketchProfile, pick) >= 0) {
         get().profileVertexClick(raw, forceOrtho);
         return;
       }
-      // Miss grip → line / pickLines draw into the provisional profile.
+      // SK-UX-B: select edge when missing vertex grips.
+      const edgeHit = hitProfileEdge(s.sketchProfile, pick);
+      if (edgeHit >= 0) {
+        get().selectProfileEdge(edgeHit);
+        return;
+      }
+      if (isClosedResultSeed(s.sketchProfile)) {
+        set({
+          profileEdgeIndex: null,
+          status: CLOSED_SEED_LINE_STATUS,
+        });
+        return;
+      }
+      // Miss grip → line / pickLines draw into open provisional.
       if (s.drawMode !== "line" && s.drawMode !== "pickLines") {
         get().profileVertexClick(raw, forceOrtho);
         return;
@@ -1013,16 +1122,23 @@ export const createSketchToolSlice: SessionSliceCreator<{
       const pick = ontoSessionWorkplane(s.activeWorkplane, raw);
       const hit = hitProfileVertex(s.sketchProfile, pick);
       if (hit < 0) {
+        const edgeHit = hitProfileEdge(s.sketchProfile, pick);
+        if (edgeHit >= 0) {
+          get().selectProfileEdge(edgeHit);
+          return;
+        }
         set({
-          status:
-            "Sketch provisional — clic un vértice (snap activo) o Rectángulo/arco para redibujar",
+          status: isClosedResultSeed(s.sketchProfile)
+            ? "Clic un vértice o arista (snap visible) · Split / Redibujar para cambiar topología"
+            : "Sketch provisional — clic un vértice o Redibujar",
         });
         return;
       }
       set({
         profileVertexIndex: hit,
+        profileEdgeIndex: null,
         wallHover: pick,
-        status: `Vértice ${hit + 1} — clic o arrastra (snap/orto) · Terminar valida`,
+        status: `Vértice ${hit + 1} seleccionado — clic/arrastra (snap) · Terminar confirma`,
       });
       return;
     }
@@ -1035,16 +1151,21 @@ export const createSketchToolSlice: SessionSliceCreator<{
       resolved.point,
     );
     if (!moved) {
-      set({ profileVertexIndex: null, status: "No se pudo mover el vértice" });
+      set({
+        profileVertexIndex: null,
+        profileEdgeIndex: null,
+        status: "No se pudo mover el vértice",
+      });
       return;
     }
     set({
       sketchProfile: moved,
       profileVertexIndex: null,
+      profileEdgeIndex: null,
       wallHover: resolved.point,
       lastSnapKind: resolved.kind,
       snapSession: resolved.session,
-      status: "Sketch provisional actualizado · Terminar valida y aplica",
+      status: "Vértice movido · preview · Terminar confirma en el documento",
     });
   },
 
@@ -1073,6 +1194,101 @@ export const createSketchToolSlice: SessionSliceCreator<{
     set({
       profileVertexIndex: null,
       status: "Sketch provisional actualizado · Terminar valida y aplica",
+    });
+  },
+
+  profileEdgeClick: (raw, forceOrtho = false) => {
+    const s = get();
+    if (!s.sketchTarget || !s.sketchProfile) return;
+
+    if (s.profileEdgeIndex == null) {
+      const pick = ontoSessionWorkplane(s.activeWorkplane, raw);
+      const edgeHit = hitProfileEdge(s.sketchProfile, pick);
+      if (edgeHit >= 0) {
+        get().selectProfileEdge(edgeHit);
+        return;
+      }
+      set({
+        status: isClosedResultSeed(s.sketchProfile)
+          ? "Clic un vértice o arista (snap visible) · Split / Redibujar para cambiar topología"
+          : "Sketch provisional — clic un vértice/arista o Redibujar",
+      });
+      return;
+    }
+
+    const mid = profileEdgeMidpoint(s.sketchProfile, s.profileEdgeIndex);
+    if (!mid) {
+      set({ profileEdgeIndex: null, status: "Arista fuera de rango" });
+      return;
+    }
+    const resolved = resolveSketchEditPoint(s, raw, forceOrtho, mid);
+    const delta = {
+      x: resolved.point.x - mid.x,
+      y: resolved.point.y - mid.y,
+      z: resolved.point.z - mid.z,
+    };
+    if (Math.hypot(delta.x, delta.y, delta.z) < 1e-9) {
+      set({
+        profileEdgeIndex: null,
+        status: "Arista — destino igual al centro (sin cambio)",
+      });
+      return;
+    }
+    const next = translateProfileEdge(
+      s.sketchProfile,
+      s.profileEdgeIndex,
+      delta,
+    );
+    if (!next) {
+      set({
+        profileEdgeIndex: null,
+        status: "No se pudo proyectar la arista",
+      });
+      return;
+    }
+    set({
+      sketchProfile: next,
+      profileEdgeIndex: null,
+      profileVertexIndex: null,
+      wallHover: resolved.point,
+      lastSnapKind: resolved.kind,
+      snapSession: resolved.session,
+      status: "Arista proyectada · preview · Terminar confirma en el documento",
+    });
+  },
+
+  profileEdgeDragTo: (raw, forceOrtho = false) => {
+    const s = get();
+    if (!s.sketchTarget || !s.sketchProfile || s.profileEdgeIndex == null) return;
+    const mid = profileEdgeMidpoint(s.sketchProfile, s.profileEdgeIndex);
+    if (!mid) return;
+    const resolved = resolveSketchEditPoint(s, raw, forceOrtho, mid);
+    const delta = {
+      x: resolved.point.x - mid.x,
+      y: resolved.point.y - mid.y,
+      z: resolved.point.z - mid.z,
+    };
+    if (Math.hypot(delta.x, delta.y, delta.z) < 1e-12) return;
+    const next = translateProfileEdge(
+      s.sketchProfile,
+      s.profileEdgeIndex,
+      delta,
+    );
+    if (!next) return;
+    set({
+      sketchProfile: next,
+      wallHover: resolved.point,
+      lastSnapKind: resolved.kind,
+      snapSession: resolved.session,
+    });
+  },
+
+  endProfileEdgeDrag: () => {
+    const s = get();
+    if (!s.sketchTarget) return;
+    set({
+      profileEdgeIndex: null,
+      status: "Arista proyectada · Terminar valida y aplica",
     });
   },
 
@@ -1264,6 +1480,7 @@ export const createSketchToolSlice: SessionSliceCreator<{
       sketchProfile: profile,
       sketchProfileStroke: false,
       profileVertexIndex: null,
+      profileEdgeIndex: null,
       sketchModifyMode: "vertex",
       sketchModifyPending: null,
       selectedWallId: id,

@@ -31,7 +31,7 @@ describe("SK-replace — provisional free profile → new walls", () => {
     expect(s.document.walls).toHaveLength(1);
   });
 
-  it("miss grip with line tool appends to provisional (does not wipe seed)", () => {
+  it("SK-UX-A: miss grip with line on closed seed does not append", () => {
     useSessionStore.getState().newProject();
     useSessionStore.getState().setTool("wall");
     useSessionStore.getState().wallClick({ x: 0, y: 0, z: 0 });
@@ -41,13 +41,14 @@ describe("SK-replace — provisional free profile → new walls", () => {
     expect(useSessionStore.getState().sketchProfile?.edges).toHaveLength(4);
 
     useSessionStore.getState().setDrawMode("line");
-    // Points on face plane (y = +thickness/2, z varies).
     const half = useSessionStore.getState().document.walls[0]!.thickness / 2;
-    useSessionStore.getState().wallClick({ x: 0.5, y: half, z: 0.5 });
-    useSessionStore.getState().wallClick({ x: 2.5, y: half, z: 1.0 });
-    const prof = useSessionStore.getState().sketchProfile!;
-    expect(prof.edges.length).toBeGreaterThanOrEqual(5);
-    expect(useSessionStore.getState().document.walls).toHaveLength(1);
+    // Interior face point (not on an edge) — must not append.
+    useSessionStore.getState().wallClick({ x: 1.5, y: half, z: 1.2 });
+    useSessionStore.getState().wallClick({ x: 2.0, y: half, z: 1.5 });
+    const s = useSessionStore.getState();
+    expect(s.sketchProfile!.edges).toHaveLength(4);
+    expect(s.status).toMatch(/Redibujar|vértices|Split|arista/i);
+    expect(s.document.walls).toHaveLength(1);
   });
 
   it("moves one vertex freely on the face without constraining the rectangle", () => {
@@ -163,6 +164,8 @@ describe("SK-replace — provisional free profile → new walls", () => {
     enterFaceSketch(wallId);
 
     const half = useSessionStore.getState().document.walls[0]!.thickness / 2;
+    // SK-UX-A: Rect only after Redibujar clears the closed seed.
+    useSessionStore.getState().redrawSketchProfile();
     useSessionStore.getState().setDrawMode("rectangle");
     useSessionStore.getState().wallClick({ x: 0, y: half, z: 0 });
     useSessionStore.getState().wallClick({ x: 0.02, y: half, z: 0.02 });

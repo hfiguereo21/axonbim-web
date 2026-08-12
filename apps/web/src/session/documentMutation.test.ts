@@ -112,6 +112,16 @@ describe("documentMutation (corte 7c)", () => {
     );
   });
 
+  it("SK-UX-A: maps profile.* rejection codes to Spanish", () => {
+    expect(rejectionStatus("profile.ends", "tech")).toMatch(/extremos/i);
+    expect(rejectionStatus("profile.selfIntersection", "tech")).toMatch(
+      /autointersect/i,
+    );
+    expect(rejectionStatus("wall.profile.heightLocked", "tech")).toMatch(
+      /perfil custom/i,
+    );
+  });
+
   it("keeps redo available when a command is rejected", () => {
     const doc = createEmptyDocument();
     const history = new HistoryStack();

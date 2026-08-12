@@ -49,6 +49,8 @@ export type SessionState = {
   sketchProfile: SketchProfile | null;
   sketchProfileStroke: boolean;
   profileVertexIndex: number | null;
+  /** SK-UX-B — selected edge index in walk order (session only). */
+  profileEdgeIndex: number | null;
   /** Bloque 6B — Modificar sobre provisional (null path = vertex default). */
   sketchModifyMode: SketchModifyMode;
   sketchModifyPending: SketchPoint | null;
@@ -56,6 +58,16 @@ export type SessionState = {
   redrawSketchProfile: () => void;
   sketchModifyClick: (raw: SketchPoint, forceOrtho?: boolean) => void;
   deleteSelectedProfileVertex: () => void;
+  selectProfileEdge: (edgeIndex: number | null) => void;
+  profileEdgeClick: (
+    p: { x: number; y: number; z: number },
+    forceOrtho?: boolean,
+  ) => void;
+  profileEdgeDragTo: (
+    p: { x: number; y: number; z: number },
+    forceOrtho?: boolean,
+  ) => void;
+  endProfileEdgeDrag: () => void;
   wallChain: boolean;
   activeFamilyId: string;
   wallHeight: number;

@@ -8,11 +8,14 @@ import {
   deleteProfileVertex,
   filletProfileVertex,
   hitProfileVertex,
+  moveProfileVertex,
   offsetProfileInPlane,
+  profileVertices,
   rotateProfileAboutAxis,
   splitProfileAtPoint,
   splitProfileEdgeByLine,
   translateProfile,
+  translateProfileEdge,
   type SketchPoint,
 } from "@axonbim/tools";
 import type { SessionSliceCreator } from "./sliceTypes.js";
@@ -54,7 +57,7 @@ const H3_HINT = "preview en viewport · Terminar confirma en el documento";
 function modifyStatus(mode: SketchModifyMode): string {
   switch (mode) {
     case "move":
-      return `Mover perfil — clic origen → destino (${H3_HINT})`;
+      return `Mover — origen→destino (arista/vértice seleccionado o bucle) · ${H3_HINT}`;
     case "rotate":
       return `Rotar perfil — clic pivote → dirección (${H3_HINT})`;
     case "splitPoint":
@@ -70,7 +73,7 @@ function modifyStatus(mode: SketchModifyMode): string {
     case "redraw":
       return "Redibujar";
     default:
-      return `Sketch — editar vértices (${H3_HINT})`;
+      return `Sketch — editar vértices / aristas (${H3_HINT})`;
   }
 }
 
@@ -99,11 +102,13 @@ export const createSketchModifySlice: SessionSliceCreator<{
       get().redrawSketchProfile();
       return;
     }
-    // H1: Modificar must receive Viewport picks (gate activeTool === "wall").
+    // Keep edge/vertex selection for Mover; clear only pending.
+    const clearSel = mode !== "move" && mode !== "copy";
     set({
       sketchModifyMode: mode,
       sketchModifyPending: null,
-      profileVertexIndex: null,
+      profileVertexIndex: clearSel ? null : s.profileVertexIndex,
+      profileEdgeIndex: clearSel ? null : s.profileEdgeIndex,
       activeTool: "wall",
       ...clearDrawPartial(),
       status: modifyStatus(mode),
@@ -122,6 +127,7 @@ export const createSketchModifySlice: SessionSliceCreator<{
       sketchModifyMode: "vertex",
       sketchModifyPending: null,
       profileVertexIndex: null,
+      profileEdgeIndex: null,
       drawMode: "rectangle",
       activeTool: "wall",
       ...clearDrawPartial(),
@@ -147,7 +153,8 @@ export const createSketchModifySlice: SessionSliceCreator<{
     set({
       sketchProfile: next,
       profileVertexIndex: null,
-      status: "Vértice eliminado · Terminar aplica",
+      profileEdgeIndex: null,
+      status: `Vértice eliminado · ${H3_HINT}`,
     });
   },
 
@@ -161,10 +168,21 @@ export const createSketchModifySlice: SessionSliceCreator<{
     if (mode === "vertex" || mode === "redraw") return;
 
     if (mode === "splitPoint") {
+      const before = profileVertices(s.sketchProfile).length;
       const next = splitProfileAtPoint(s.sketchProfile, p);
+      const after = profileVertices(next).length;
+      if (after <= before) {
+        set({
+          sketchModifyPending: null,
+          status:
+            "Split point — sin cambio (clic en el medio de una arista, no en un vértice)",
+        });
+        return;
+      }
       set({
         sketchProfile: next,
         sketchModifyPending: null,
+        profileEdgeIndex: null,
         status: `Split point — vértice insertado · ${H3_HINT}`,
       });
       return;
@@ -183,6 +201,7 @@ export const createSketchModifySlice: SessionSliceCreator<{
       }
       set({
         sketchProfile: next,
+        profileEdgeIndex: null,
         status: `Fillet aplicado · ${H3_HINT}`,
       });
       return;
@@ -204,6 +223,7 @@ export const createSketchModifySlice: SessionSliceCreator<{
       set({
         sketchProfile: next ?? s.sketchProfile,
         sketchModifyPending: null,
+        profileEdgeIndex: next ? null : s.profileEdgeIndex,
         status: next
           ? `Split line — aristas divididas · ${H3_HINT}`
           : "Split line — sin intersección con el perfil",
@@ -213,11 +233,17 @@ export const createSketchModifySlice: SessionSliceCreator<{
 
     if (mode === "move" || mode === "copy") {
       if (!s.sketchModifyPending) {
+        const sel =
+          mode === "move" && s.profileEdgeIndex != null
+            ? ` (arista ${s.profileEdgeIndex + 1})`
+            : mode === "move" && s.profileVertexIndex != null
+              ? ` (vértice ${s.profileVertexIndex + 1})`
+              : " (bucle completo)";
         set({
           sketchModifyPending: p,
           status:
             mode === "move"
-              ? "Mover — clic 2: destino (delta en Workplane + snap)"
+              ? `Mover${sel} — clic 2: destino (snap)`
               : "Copiar — clic 2: destino del desplazamiento",
         });
         return;
@@ -227,17 +253,63 @@ export const createSketchModifySlice: SessionSliceCreator<{
         y: p.y - s.sketchModifyPending.y,
         z: p.z - s.sketchModifyPending.z,
       };
-      const next =
-        mode === "copy"
-          ? copyProfileTranslated(s.sketchProfile, delta)
-          : translateProfile(s.sketchProfile, delta);
+      const mag = Math.hypot(delta.x, delta.y, delta.z);
+      if (mag < 1e-9) {
+        set({
+          sketchModifyPending: null,
+          status: "Mover — destino igual al origen (sin cambio)",
+        });
+        return;
+      }
+
+      let next = s.sketchProfile;
+      let label = "Perfil movido";
+      if (mode === "copy") {
+        next = copyProfileTranslated(s.sketchProfile, delta);
+        label = "Copia desplazada";
+      } else if (s.profileEdgeIndex != null) {
+        const edged = translateProfileEdge(
+          s.sketchProfile,
+          s.profileEdgeIndex,
+          delta,
+        );
+        if (!edged) {
+          set({
+            sketchModifyPending: null,
+            status: "Mover arista — índice inválido",
+          });
+          return;
+        }
+        next = edged;
+        label = `Arista ${s.profileEdgeIndex + 1} movida`;
+      } else if (s.profileVertexIndex != null) {
+        const from = profileVertices(s.sketchProfile)[s.profileVertexIndex];
+        if (!from) {
+          set({ sketchModifyPending: null, status: "Mover vértice — índice inválido" });
+          return;
+        }
+        const moved = moveProfileVertex(s.sketchProfile, s.profileVertexIndex, {
+          x: from.x + delta.x,
+          y: from.y + delta.y,
+          z: from.z + delta.z,
+        });
+        if (!moved) {
+          set({
+            sketchModifyPending: null,
+            status: "No se pudo mover el vértice",
+          });
+          return;
+        }
+        next = moved;
+        label = `Vértice ${s.profileVertexIndex + 1} movido`;
+      } else {
+        next = translateProfile(s.sketchProfile, delta);
+      }
+
       set({
         sketchProfile: next,
         sketchModifyPending: null,
-        status:
-          mode === "copy"
-            ? `Copia desplazada · ${H3_HINT}`
-            : `Perfil movido · ${H3_HINT}`,
+        status: `${label} · ${H3_HINT}`,
       });
       return;
     }
@@ -259,6 +331,13 @@ export const createSketchModifySlice: SessionSliceCreator<{
       const v =
         ax * wp.axisV.x + ay * wp.axisV.y + az * wp.axisV.z;
       const angle = Math.atan2(v, u);
+      if (Math.abs(angle) < 1e-6) {
+        set({
+          sketchModifyPending: null,
+          status: "Rotar — ángulo ~0° (sin cambio)",
+        });
+        return;
+      }
       const next = rotateProfileAboutAxis(
         s.sketchProfile,
         pivot,
@@ -268,6 +347,7 @@ export const createSketchModifySlice: SessionSliceCreator<{
       set({
         sketchProfile: next,
         sketchModifyPending: null,
+        profileEdgeIndex: null,
         status: `Rotado ${((angle * 180) / Math.PI).toFixed(1)}° · ${H3_HINT}`,
       });
       return;
@@ -295,6 +375,7 @@ export const createSketchModifySlice: SessionSliceCreator<{
       }
       set({
         sketchProfile: next,
+        profileEdgeIndex: null,
         status: `Desfase ${dist > 0 ? "+" : ""}${dist.toFixed(2)} m · ${H3_HINT}`,
       });
     }

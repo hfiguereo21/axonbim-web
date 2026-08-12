@@ -54,9 +54,11 @@ Fuente: esquema de producto «Modo SK» para editar muros. Extensible más adela
    estado; alzado documental puede seguir stub — basta 3D o Workplane de cara).
 3. En la vista de edición: host documental oculto; **overlay** = perfil provisional; **H3**
    sólido **preview derivado** del provisional (no es SoT; `AxonDocument` intacto).
-4. **Edición:** el usuario mueve vértices / redibuja / (plan B6) mueve·split point·split
-   line·rota·fillet·copia·desfase contra **niveles**, **snap** y un **plano de referencia**.
-   La zona modificada es provisional hasta **Terminar** (commit in-place).
+4. **Edición (SK-UX-A/B):** snap/guía visibles en el Workplane; clic/arrastre en **vértice o
+   arista** (grips a mitad de segmento); proyectar arista = arrastre o clic 2 (sin depender
+   del ribbon Mover); Línea no añade sobre seed cerrado (Split / Redibujar); Mover actúa
+   sobre la selección o el bucle; rechazos `profile.*` en español. Provisional hasta
+   **Terminar** (commit in-place).
 5. **Resultado después de la adición / Terminar:** un **único** elemento paramétrico
    coherente que sustituye al host (p. ej. muro con huella/cara convertible), no N
    muros por arista de silueta.

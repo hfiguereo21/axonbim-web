@@ -66,11 +66,17 @@ export type DocumentSceneSync = {
   setPreviewPolyline: (
     points: { x: number; y: number; z: number }[] | null,
   ) => void;
-  /** SK-profile — perimeter on Workplane + optional vertex grips. */
+  /** SK-profile — perimeter on Workplane + optional vertex grips / edge highlight. */
   setProfilePolyline: (
     points: { x: number; y: number; z: number }[] | null,
     vertices?: { x: number; y: number; z: number }[] | null,
     selectedVertex?: number | null,
+    frame?: {
+      normal: { x: number; y: number; z: number };
+      axisU: { x: number; y: number; z: number };
+      axisV: { x: number; y: number; z: number };
+    } | null,
+    selectedEdge?: number | null,
   ) => void;
   /** WP-v2 — tangible workplane patch + U/V axes. */
   setWorkplaneOverlay: (
@@ -84,10 +90,16 @@ export type DocumentSceneSync = {
     p1: { x: number; y: number; z: number } | null,
     p2: { x: number; y: number; z: number } | null,
   ) => void;
+  /** Snap marker + optional ortho guides; `frame` orients the cross on the Workplane. */
   setSnapCue: (
     point: { x: number; y: number; z: number } | null,
     kind: "none" | "endpoint" | "ortho" | "close",
     pending?: { x: number; y: number; z: number } | null,
+    frame?: {
+      normal: { x: number; y: number; z: number };
+      axisU: { x: number; y: number; z: number };
+      axisV: { x: number; y: number; z: number };
+    } | null,
   ) => void;
   disposeOverlays: () => void;
 };
@@ -139,9 +151,13 @@ export function createDocumentSceneSync(
     "position",
     new BufferAttribute(new Float32Array(PREVIEW_MAX_SEGMENTS * 2 * 3), 3),
   );
-  const previewMat = new LineBasicMaterial({ color: 0xd4a15a });
+  const previewMat = new LineBasicMaterial({
+    color: 0xd4a15a,
+    depthTest: false,
+  });
   const previewLine = new LineSegments(previewGeom, previewMat);
   previewLine.visible = false;
+  previewLine.renderOrder = 5;
   scene.add(previewLine);
 
   const profileGeom = new BufferGeometry();
@@ -150,24 +166,47 @@ export function createDocumentSceneSync(
     "position",
     new BufferAttribute(new Float32Array(PROFILE_MAX_SEGMENTS * 2 * 3), 3),
   );
-  const profileMat = new LineBasicMaterial({ color: 0xffb000 });
+  const profileMat = new LineBasicMaterial({
+    color: 0xffb000,
+    depthTest: false,
+  });
   const profileLine = new LineSegments(profileGeom, profileMat);
-  profileLine.renderOrder = 2;
+  profileLine.renderOrder = 6;
   profileLine.visible = false;
   scene.add(profileLine);
 
   const profileGripGeom = new BufferGeometry();
-  const PROFILE_MAX_GRIPS = 32;
+  // Vertices + mid-edge grips (closed ring up to ~16 edges).
+  const PROFILE_MAX_GRIPS = 48;
   // 4 endpoints per cross × 3 floats
   profileGripGeom.setAttribute(
     "position",
     new BufferAttribute(new Float32Array(PROFILE_MAX_GRIPS * 4 * 3), 3),
   );
-  const profileGripMat = new LineBasicMaterial({ color: 0xffb000 });
+  const profileGripMat = new LineBasicMaterial({
+    color: 0xffb000,
+    depthTest: false,
+  });
   const profileGrips = new LineSegments(profileGripGeom, profileGripMat);
-  profileGrips.renderOrder = 3;
+  profileGrips.renderOrder = 7;
   profileGrips.visible = false;
   scene.add(profileGrips);
+
+  // SK-UX-B — selected edge highlight (one segment).
+  const profileEdgeGeom = new BufferGeometry();
+  profileEdgeGeom.setAttribute(
+    "position",
+    new BufferAttribute(new Float32Array(6), 3),
+  );
+  const profileEdgeMat = new LineBasicMaterial({
+    color: 0xff6a00,
+    depthTest: false,
+    linewidth: 2,
+  });
+  const profileEdgeLine = new LineSegments(profileEdgeGeom, profileEdgeMat);
+  profileEdgeLine.renderOrder = 8;
+  profileEdgeLine.visible = false;
+  scene.add(profileEdgeLine);
 
   // WP-v2: patch = 4 edges; axes = 2 segments from origin
   const wpOverlayGeom = new BufferGeometry();
@@ -516,12 +555,15 @@ export function createDocumentSceneSync(
       axisU: { x: number; y: number; z: number };
       axisV: { x: number; y: number; z: number };
     } | null = null,
+    selectedEdge: number | null = null,
   ) => {
     if (!points || points.length < 2) {
       profileLine.visible = false;
       profileGeom.setDrawRange(0, 0);
       profileGrips.visible = false;
       profileGripGeom.setDrawRange(0, 0);
+      profileEdgeLine.visible = false;
+      profileEdgeGeom.setDrawRange(0, 0);
       return;
     }
     const lift = 0.12;
@@ -557,8 +599,39 @@ export function createDocumentSceneSync(
     profileGeom.setDrawRange(0, seg * 2);
     profileLine.visible = seg > 0;
 
+    // Highlight selected edge (segment index in walk order).
+    if (
+      selectedEdge != null &&
+      selectedEdge >= 0 &&
+      selectedEdge < points.length - 1
+    ) {
+      const a = points[selectedEdge]!;
+      const b = points[selectedEdge + 1]!;
+      const elift = lift + 0.03;
+      const earr = profileEdgeGeom.getAttribute("position") as BufferAttribute;
+      earr.setXYZ(0, a.x + nx * elift, a.y + ny * elift, a.z + nz * elift);
+      earr.setXYZ(1, b.x + nx * elift, b.y + ny * elift, b.z + nz * elift);
+      earr.needsUpdate = true;
+      profileEdgeGeom.setDrawRange(0, 2);
+      profileEdgeLine.visible = true;
+    } else {
+      profileEdgeLine.visible = false;
+      profileEdgeGeom.setDrawRange(0, 0);
+    }
+
     const grips = vertices && vertices.length > 0 ? vertices : [];
-    if (grips.length === 0) {
+    // Mid-edge grips so segments read as projectable (SK-UX-B).
+    const mids: { x: number; y: number; z: number }[] = [];
+    for (let i = 0; i < points.length - 1; i++) {
+      const a = points[i]!;
+      const b = points[i + 1]!;
+      mids.push({
+        x: (a.x + b.x) * 0.5,
+        y: (a.y + b.y) * 0.5,
+        z: (a.z + b.z) * 0.5,
+      });
+    }
+    if (grips.length === 0 && mids.length === 0) {
       profileGrips.visible = false;
       profileGripGeom.setDrawRange(0, 0);
       return;
@@ -566,24 +639,34 @@ export function createDocumentSceneSync(
     const garr = profileGripGeom.getAttribute("position") as BufferAttribute;
     let gi = 0;
     const gripLift = lift + 0.02;
-    for (let i = 0; i < grips.length && i < PROFILE_MAX_GRIPS; i++) {
-      const v = grips[i]!;
-      const s = i === selectedVertex ? 0.28 : 0.16;
+    const putCross = (
+      v: { x: number; y: number; z: number },
+      s: number,
+    ) => {
+      if (gi >= PROFILE_MAX_GRIPS) return;
       const cx = v.x + nx * gripLift;
       const cy = v.y + ny * gripLift;
       const cz = v.z + nz * gripLift;
       const base = gi * 4;
-      // Cross in face UV (axisU × axisV), not world XY.
       garr.setXYZ(base + 0, cx - ux * s, cy - uy * s, cz - uz * s);
       garr.setXYZ(base + 1, cx + ux * s, cy + uy * s, cz + uz * s);
       garr.setXYZ(base + 2, cx - vx * s, cy - vy * s, cz - vz * s);
       garr.setXYZ(base + 3, cx + vx * s, cy + vy * s, cz + vz * s);
       gi++;
+    };
+    for (let i = 0; i < grips.length; i++) {
+      putCross(grips[i]!, i === selectedVertex ? 0.34 : 0.16);
+    }
+    for (let i = 0; i < mids.length; i++) {
+      putCross(mids[i]!, i === selectedEdge ? 0.28 : 0.11);
     }
     garr.needsUpdate = true;
     profileGripGeom.setDrawRange(0, gi * 4);
     profileGripMat.color.setHex(
-      selectedVertex != null && selectedVertex >= 0 ? 0xff6a00 : 0xffb000,
+      (selectedVertex != null && selectedVertex >= 0) ||
+        (selectedEdge != null && selectedEdge >= 0)
+        ? 0xff6a00
+        : 0xffb000,
     );
     profileGrips.visible = gi > 0;
   };
@@ -661,20 +744,52 @@ export function createDocumentSceneSync(
     point: { x: number; y: number; z: number } | null,
     kind: "none" | "endpoint" | "ortho" | "close",
     pending: { x: number; y: number; z: number } | null = null,
+    frame: {
+      normal: { x: number; y: number; z: number };
+      axisU: { x: number; y: number; z: number };
+      axisV: { x: number; y: number; z: number };
+    } | null = null,
   ) => {
+    const nx = frame?.normal.x ?? 0;
+    const ny = frame?.normal.y ?? 0;
+    const nz = frame?.normal.z ?? 1;
+    const ux = frame?.axisU.x ?? 1;
+    const uy = frame?.axisU.y ?? 0;
+    const uz = frame?.axisU.z ?? 0;
+    const vx = frame?.axisV.x ?? 0;
+    const vy = frame?.axisV.y ?? 1;
+    const vz = frame?.axisV.z ?? 0;
+    const lift = 0.08;
+
+    const placeCross = (
+      p: { x: number; y: number; z: number },
+      s: number,
+      color: number,
+    ) => {
+      const cx = p.x + nx * lift;
+      const cy = p.y + ny * lift;
+      const cz = p.z + nz * lift;
+      const arr = snapMarkerGeom.getAttribute("position") as BufferAttribute;
+      // Cross in Workplane UV (fallback ≈ world XY when frame omitted).
+      arr.setXYZ(0, cx - ux * s, cy - uy * s, cz - uz * s);
+      arr.setXYZ(1, cx + ux * s, cy + uy * s, cz + uz * s);
+      arr.setXYZ(2, cx - vx * s, cy - vy * s, cz - vz * s);
+      arr.setXYZ(3, cx + vx * s, cy + vy * s, cz + vz * s);
+      arr.needsUpdate = true;
+      snapMarkerMat.color.setHex(color);
+      snapMarker.visible = true;
+    };
+
     if (!point || kind === "none") {
-      // Still show a faint cursor mark when free-drawing with pending
+      // Faint cursor when free-drawing / Modificar pending without snap kind.
       if (point && pending) {
-        const s = 0.12;
-        const z = point.z + 0.08;
-        const arr = snapMarkerGeom.getAttribute("position") as BufferAttribute;
-        arr.setXYZ(0, point.x - s, point.y, z);
-        arr.setXYZ(1, point.x + s, point.y, z);
-        arr.setXYZ(2, point.x, point.y - s, z);
-        arr.setXYZ(3, point.x, point.y + s, z);
-        arr.needsUpdate = true;
-        snapMarkerMat.color.setHex(snapColors.none);
-        snapMarker.visible = true;
+        placeCross(point, 0.12, snapColors.none);
+        snapGuide.visible = false;
+        previewMat.color.setHex(0xb0b8c0);
+        return;
+      }
+      if (point) {
+        placeCross(point, 0.12, snapColors.none);
         snapGuide.visible = false;
         previewMat.color.setHex(0xb0b8c0);
         return;
@@ -686,21 +801,24 @@ export function createDocumentSceneSync(
     }
 
     const s = kind === "close" || kind === "endpoint" ? 0.22 : 0.16;
-    const z = point.z + 0.08;
-    const arr = snapMarkerGeom.getAttribute("position") as BufferAttribute;
-    arr.setXYZ(0, point.x - s, point.y, z);
-    arr.setXYZ(1, point.x + s, point.y, z);
-    arr.setXYZ(2, point.x, point.y - s, z);
-    arr.setXYZ(3, point.x, point.y + s, z);
-    arr.needsUpdate = true;
-    snapMarkerMat.color.setHex(snapColors[kind]);
-    snapMarker.visible = true;
+    placeCross(point, s, snapColors[kind]);
     previewMat.color.setHex(snapColors[kind]);
 
-    if (pending && (kind === "ortho" || kind === "close")) {
+    if (pending && (kind === "ortho" || kind === "close" || kind === "endpoint")) {
+      const gLift = 0.04;
       const g = snapGuideGeom.getAttribute("position") as BufferAttribute;
-      g.setXYZ(0, pending.x, pending.y, pending.z + 0.04);
-      g.setXYZ(1, point.x, point.y, point.z + 0.04);
+      g.setXYZ(
+        0,
+        pending.x + nx * gLift,
+        pending.y + ny * gLift,
+        pending.z + nz * gLift,
+      );
+      g.setXYZ(
+        1,
+        point.x + nx * gLift,
+        point.y + ny * gLift,
+        point.z + nz * gLift,
+      );
       g.needsUpdate = true;
       snapGuideMat.color.setHex(snapColors[kind]);
       snapGuide.visible = true;
@@ -716,6 +834,8 @@ export function createDocumentSceneSync(
     profileMat.dispose();
     profileGripGeom.dispose();
     profileGripMat.dispose();
+    profileEdgeGeom.dispose();
+    profileEdgeMat.dispose();
     wpOverlayGeom.dispose();
     wpOverlayMat.dispose();
     wpTraceGeom.dispose();

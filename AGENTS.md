@@ -30,7 +30,7 @@ Punto de entrada para agentes de IA. Lee esto antes de cualquier cambio material
 | Legado desktop | `docs/migration/legacy-inventory.md`, `migration-rules.md` |
 | Validar / auditoría | `docs/validation/acceptance-matrix.md`, `acceptance-matrix-post-mvp.md`, `technical-audit-2026-08.md`, `playwright-f8.md`, `navigation-3d-checklist.md` |
 | **Auditoría externa 2026-08-08** | **`docs/validation/external-audit-2026-08-08.md`** (P0/P1 de integridad) |
-| **SK wall profile (paquete 2026-08-10)** | **`docs/validation/sk-wall-profile-report-2026-08-10/`** · B0: `sk-wall-profile-bloque0-2026-08-10.md` · B5 checklist: `sk-wall-profile-bloque5-checklist-2026-08-10.md` · ADR **0018** |
+| **SK wall profile (paquete 2026-08-10)** | **`docs/validation/sk-wall-profile-report-2026-08-10/`** · B0: `sk-wall-profile-bloque0-2026-08-10.md` · B5 checklist: `sk-wall-profile-bloque5-checklist-2026-08-10.md` · UX A/B: `sk-ux-ab-checklist-2026-08-10.md` · ADR **0018** |
 | UI / layout | `docs/ui/interface-base.md`, `reference-shell-baseline.md`, `axonbim-shell-v0.md` |
 | Fase / gates | `docs/roadmap/work-phases.md`, `gates.md`, **`f5-stabilization.md`** |
 | **Pendientes y prioridad (hilo único)** | **`docs/roadmap/pending-work.md`** (avance = línea LR) |

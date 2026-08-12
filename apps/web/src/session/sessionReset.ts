@@ -48,6 +48,7 @@ export function resetSessionForDocument(
     profileVertexIndex: null,
     sketchModifyMode: "vertex" as const,
     sketchModifyPending: null,
+    profileEdgeIndex: null,
     ribbonTab: "architecture",
     activeStoreyId,
     activeWorkplane: workplaneFromStorey(storey),
