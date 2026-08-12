@@ -51,7 +51,7 @@ hay una especificación propia**.
 | [`source-register.md`](source-register.md) | Las fuentes admitidas: URL oficial, fecha consultada, licencia, y qué usos permite cada una |
 | [`adoption-matrix.md`](adoption-matrix.md) | Qué patrón se adoptó, adaptó, rechazó o aplazó, y a qué contrato de AxonBIM se tradujo |
 | [`templates/reference-assessment.md`](templates/reference-assessment.md) | La ficha de evaluación, 13 campos |
-| `pilots/` | Estudios aplicados a un problema concreto, sin implementación. Se crea con el primero |
+| [`pilots/wall-profile-reference-study.md`](pilots/wall-profile-reference-study.md) | Primer piloto: edición del perfil vertical de muro. Problema medido, comportamiento objetivo y pruebas — sin implementación |
 
 ## Estados de una ficha
 
