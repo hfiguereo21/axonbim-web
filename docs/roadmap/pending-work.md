@@ -3,8 +3,10 @@
 **Fuente de verdad** para lo que queda por hacer. Si otro documento contradice este,
 **prevalece este** hasta que se actualice explícitamente.
 
-Última revisión: **2026-08-10** — **SK-wall-profile-v1 cerrado** (Bloques 0–7).
-Siguiente hilo: losas / terreno / barridos u Edit Mode (auth). ADR 0018.
+Última revisión: **2026-08-12** — **SK-wall-profile-v1 cerrado pero mínimamente funcional**.
+El dueño lo declara insuficiente para producto final; el piloto REF-0 mide por qué y esta cola
+descompone el refactor en fases. Siguiente hilo: **SK-R1…SK-R5**, y solo después
+losas / terreno / barridos u Edit Mode. ADR 0018, 0022.
 
 Detalle de bloques LR: [`legacy-reuse-roadmap.md`](legacy-reuse-roadmap.md) ·
 resumen [`../migration/plan-integracion-selectiva-resumen.md`](../migration/plan-integracion-selectiva-resumen.md).
@@ -18,6 +20,11 @@ prerrequisito. Cada bloque = frase explícita en chat + gate.
 
 ```
 LR0–LR3 + WP + SK-* + SK-profile-one + SK-wall-profile-v1
+  → SK-R1 rechazo explicable
+  → SK-R2 ADR sustrato de edición  → SK-R3 sesión compartida
+       → SK-R4 trazado incremental
+       → LR1-C snaps geométricos
+       → SK-R5 parámetros de operación
   → losas/terreno/barridos u Edit Mode (auth)
   ↘ LR3-D → LR4… (parked)
 ```
@@ -37,7 +44,13 @@ LR0–LR3 + WP + SK-* + SK-profile-one + SK-wall-profile-v1
 | — | **SK-profile** + **SK-replace v0** | **cerrada** 2026-08-09 | Provisional libre; replace Delete+Create |
 | — | **SK-profile-one** | **cerrada** 2026-08-10 | Anti silueta→N muros; **no** perfil vertical persistente |
 | — | **SK-wall-profile-v1** | **cerrada** 2026-08-10 | ADR 0018; `.axon` v2; Bloques 0–7 |
-| **1** | **Sketch → losas / terreno / barridos** u **Edit Mode** | auth | Frase explícita; no IFC/OCCT |
+| **1** | **SK-R1** Superficie de rechazo explicable | auth | Los 11 códigos con regla, ubicación y remedio; 2 tests guardia |
+| **2** | **SK-R2** ADR del sustrato de edición | auth | Decisión escrita: dibujo · transformación · snap · planos como base común |
+| **3** | **SK-R3** Sesión de edición compartida | tras SK-R2 | Una sesión única que consumen todas las funciones, no lógica por función |
+| **4** | **SK-R4** Trazado incremental | tras SK-R3 | Componer contorno arista a arista; hoy ninguna operación añade aristas |
+| **5** | **LR1-C** Snaps geométricos | tras SK-R3 | midpoint · intersección · perpendicular · tangente (hoy: 4 casos) |
+| **6** | **SK-R5** Parámetros de operación | tras SK-R3 | Radio de fillet y distancia de offset dejan de ser constantes |
+| **7** | **Sketch → losas / terreno / barridos** u **Edit Mode** | auth, **tras SK-R3** | Frase explícita; no IFC/OCCT |
 
 ### Parked (no son el hilo actual)
 
@@ -45,7 +58,6 @@ Solo con auth **y** prerrequisitos. No reordenan la cola de arriba.
 
 | Tema | Prerreq. | Doc |
 |------|----------|-----|
-| **LR1-C** Snaps geométricos (midpoint, perpendicular, …) | tras LR1; auth | `legacy-reuse-roadmap.md` §LR1-C |
 | LR4 Technical Views | LR3-D + auth doc 2D | `legacy-reuse-roadmap.md` |
 | LR5 Render invalidation | evidencia de coste | idem |
 | LR6 IFC Recognition Policy | auth IFC | ADR 0003 |
@@ -62,12 +74,27 @@ qué **no** se reutiliza · tests. Tras: archivos · tests · Undo/Redo si aplic
 
 ### Próximo paso
 
-**SK-wall-profile-v1 cerrado.** Autorizar el siguiente producto con frase explícita, p. ej.:
+**SK-R1 — superficie de rechazo explicable.** Es la fase de mayor alivio por unidad de
+trabajo y la única que **no depende del sustrato**, así que puede ir primero:
 
-> Autorizo Sketch → losas (o Edit Mode / terreno / barridos).
+> Autorizo SK-R1.
 
-Bloque 7: `.axon` v2 · migración `height`→`vertical` · round-trip perfil · reject sin degradar.
-ADR: [`../decisions/0018-wall-vertical-profile.md`](../decisions/0018-wall-vertical-profile.md).
+El problema, medido en
+[`../references/pilots/wall-profile-reference-study.md`](../references/pilots/wall-profile-reference-study.md):
+la validación emite **11 códigos** y la UI traduce **5**; los otros caen en un genérico
+«Operación rechazada». Hay además **3 traducciones huérfanas** de códigos que nadie emite.
+El usuario acaba adivinando qué contorno se acepta.
+
+**Por qué el refactor va antes de losas/terreno/barridos.** Esas funciones consumirían las
+mismas herramientas de dibujo, transformación y snap. Abrirlas sobre el sustrato actual
+multiplicaría el problema por tres en vez de resolverlo una vez — y obligaría a rehacerlas
+después. Es la razón de que la fila 7 quede detrás de SK-R3.
+
+**SK-R2 es una decisión, no código.** El sustrato compartido cambia arquitectura y por eso
+lleva ADR propio antes de tocar geometría. Implementar el perfil primero significaría volver
+a construir sobre piezas sueltas.
+
+Family Editor / Push&Pull / LR4+ / IFC / OCCT: parked.
 
 Family Editor / Push&Pull / LR1-C / LR4+ / IFC / OCCT: parked.
 
