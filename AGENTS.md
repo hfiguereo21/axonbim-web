@@ -37,6 +37,7 @@ Punto de entrada para agentes de IA. Lee esto antes de cualquier cambio material
 | **Pendientes y prioridad (hilo único)** | **`docs/roadmap/pending-work.md`** (avance = línea LR) |
 | Refactor session/viewer | `docs/roadmap/refactor-session-viewer.md` |
 | Remoto GitHub / git vs PR | `docs/roadmap/github.md` |
+| **Releases y versionado** | **`docs/roadmap/releases.md`** — esquema, requisitos previos, tags, hotfix y rollback (ADR 0023) |
 | Navegación 3D / gizmo | ADR 0014, `docs/validation/navigation-3d-checklist.md` |
 | Cámaras geométricas | ADR 0015 |
 | Región de recorte de vista | ADR 0016 |
