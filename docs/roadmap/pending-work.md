@@ -14,6 +14,11 @@ El dueño lo declara insuficiente para producto final; el piloto REF-0 mide por 
 descompone el refactor en fases. Siguiente hilo: **SK-R1…SK-R5**, y solo después
 losas / terreno / barridos u Edit Mode. ADR 0018, 0022.
 
+**Reordenada el 2026-08-12 por el sistema de familias.** El dueño señala que las familias son
+transversales a casi todo: una herramienta no instancia nada si su familia no existe antes. Se
+intercalan **FAM-1, FAM-2 y FAM-4** en la secuencia; SK-R2 baja un puesto. Ver
+«[Por qué las familias reordenan la cola](#por-qué-las-familias-reordenan-la-cola)».
+
 Detalle de bloques LR: [`legacy-reuse-roadmap.md`](legacy-reuse-roadmap.md) ·
 resumen [`../migration/plan-integracion-selectiva-resumen.md`](../migration/plan-integracion-selectiva-resumen.md).
 
@@ -27,11 +32,14 @@ prerrequisito. Cada bloque = frase explícita en chat + gate.
 ```
 LR0–LR3 + WP + SK-* + SK-profile-one + SK-wall-profile-v1
   → SK-R1 rechazo explicable
+  → FAM-1 concepto de familia + árbol maqueta
   → SK-R2 ADR sustrato de edición
+  → FAM-2 biblioteca, carga y copia
   → SK-R3 sesión de edición compartida
   → SK-R4 trazado incremental
   → LR1-C snaps geométricos
   → SK-R5 parámetros de operación
+  → FAM-4 familias compuestas (anidadas)
   → losas / terreno / barridos u Edit Mode (auth)
   ↘ LR3-D → LR4… (parked)
 
@@ -55,12 +63,19 @@ el siguiente. Nada de hilos en paralelo.
 | — | **SK-profile-one** | **cerrada** 2026-08-10 | Anti silueta→N muros; **no** perfil vertical persistente |
 | — | **SK-wall-profile-v1** | **cerrada** 2026-08-10 | ADR 0018; `.axon` v2; Bloques 0–7 |
 | **1** | **SK-R1** Superficie de rechazo explicable | auth | Los 11 códigos con regla, ubicación y remedio; 2 tests guardia |
-| **2** | **SK-R2** ADR del sustrato de edición | auth | Decisión escrita: dibujo · transformación · snap · planos como base común |
-| **3** | **SK-R3** Sesión de edición compartida | tras SK-R2 | Una sesión única que consumen todas las funciones, no lógica por función |
-| **4** | **SK-R4** Trazado incremental | tras SK-R3 | Componer contorno arista a arista; hoy ninguna operación añade aristas |
-| **5** | **LR1-C** Snaps geométricos | tras SK-R4 | midpoint · intersección · perpendicular · tangente (hoy: 4 casos) |
-| **6** | **SK-R5** Parámetros de operación | tras LR1-C | Radio de fillet y distancia de offset dejan de ser constantes |
-| **7** | **Sketch → losas / terreno / barridos** u **Edit Mode** | auth, **tras SK-R3** | Frase explícita; no IFC/OCCT |
+| **2** | **FAM-1** Concepto de familia + árbol maqueta | tras SK-R1 | Un solo tipo `Family`: categoría · tipología · parámetros · versión. Árbol declarado completo con los nodos sin realizar marcados. `.axon` v3 + migración v2→v3 |
+| **3** | **SK-R2** ADR del sustrato de edición | tras FAM-1 | Decisión escrita: dibujo · transformación · snap · planos como base común, **con la familia de perfil como entrada de primera clase** |
+| **4** | **FAM-2** Biblioteca, carga y copia | tras SK-R2 | Puerto de fuente de familias en el motor, adaptadores fuera (BD / paquete local). Cargar **copia** al proyecto; el `.axon` nunca lleva la biblioteca entera |
+| **5** | **SK-R3** Sesión de edición compartida | tras SK-R2 | Una sesión única que consumen todas las funciones, no lógica por función |
+| **6** | **SK-R4** Trazado incremental | tras SK-R3 | Componer contorno arista a arista; hoy ninguna operación añade aristas |
+| **7** | **LR1-C** Snaps geométricos | tras SK-R4 | midpoint · intersección · perpendicular · tangente (hoy: 4 casos) |
+| **8** | **SK-R5** Parámetros de operación | tras LR1-C | Radio de fillet y distancia de offset dejan de ser constantes |
+| **9** | **FAM-4** Familias compuestas | tras SK-R5 | Una familia anida familias y declara reglas entre partes: escalera → tramos + baranda; baranda → pasamanos + balaustres/paños + soportes |
+| **10** | **Sketch → losas / terreno / barridos** u **Edit Mode** | auth, **tras SK-R3** | Frase explícita; no IFC/OCCT. Escalera y baranda exigen además FAM-4 |
+
+**No existe FAM-3, y el hueco es deliberado.** Ocupaba «definir las familias base» y se eliminó:
+las familias concretas **no son un bloque**, llegan emparejadas con su herramienta (ver la regla
+de emparejamiento abajo). Se conserva la numeración para que el hueco recuerde la decisión.
 
 ### Parked (no son el hilo actual)
 
@@ -68,6 +83,8 @@ Solo con auth **y** prerrequisitos. No reordenan la cola de arriba.
 
 | Tema | Prerreq. | Doc |
 |------|----------|-----|
+| **Vínculos entre `.axon`** | FAM-2 + auth | Ver otro proyecto **por referencia, sin copiarlo** (estructural, levantamiento, terreno). Concepto distinto de cargar una familia: el vínculo refleja los cambios del origen, la copia no |
+| **Family Editor** (que el usuario cree familias) | FAM-1 + FAM-2 + auth | `editing-paradigms.md`. Precargar catálogo **no** lo abre |
 | LR4 Technical Views | LR3-D + auth doc 2D | `legacy-reuse-roadmap.md` |
 | LR5 Render invalidation | evidencia de coste | idem |
 | LR6 IFC Recognition Policy | auth IFC | ADR 0003 |
@@ -115,7 +132,80 @@ El riesgo de reproceso es bajo y el alivio es inmediato.
 
 Family Editor / Push&Pull / LR4+ / IFC / OCCT: parked.
 
-Family Editor / Push&Pull / LR1-C / LR4+ / IFC / OCCT: parked.
+## Por qué las familias reordenan la cola
+
+Decisiones del dueño, 2026-08-12. Se registran aquí porque **ordenan la cola**; el contrato
+técnico lo fijará el ADR de FAM-1.
+
+### La regla de emparejamiento
+
+> **Ninguna herramienta entra en la cola sin su familia delante.** Acotar exige antes la familia
+> de cota; colocar texto exige antes la familia de texto con sus propiedades y parámetros. La
+> familia es **prerrequisito del bloque**, no una tarea dentro de él.
+
+El dominio ya impone el principio: [`validate.ts`](../../packages/model/src/validate.ts) rechaza
+un elemento cuyo `familyId` no esté en el catálogo del documento. Lo que falta es alcance, no
+criterio. Crear el tipo en el momento de dibujarlo mezcla dos problemas difíciles —«qué es un
+muro» y «dibujo este muro»— en un solo gesto.
+
+### El árbol se declara entero; se realiza por partes
+
+Mismo criterio que la maqueta de UI ([`axonbim-shell-v0.md`](../ui/axonbim-shell-v0.md)):
+distribución completa, la mayoría de nodos sin realizar, y un corte vertical real. Definir hoy
+todas las familias es inviable —son demasiadas y cada tipo es trabajo propio—, pero el árbol
+declarado da sitio a cada una cuando llegue.
+
+Hoy no hay taxonomía alguna: `WallFamily`, `DoorFamily` y `WindowFamily` son **tres tipos
+sueltos** con tres arrays, tres buscadores y tres ramas de validación. Añadir losa son cuatro de
+cada cosa. Por eso la escalera no es difícil, es **inexpresable**.
+
+### Geometría: 3D procedural, 2D vectores
+
+- **3D → siempre procedural.** La familia lleva parámetros y reglas; el motor construye la forma.
+  Guardar mallas dispara el peso del archivo y rompe lo paramétrico, que es el no negociable 1.
+- **2D con vectores → se guarda tal cual.** Un símbolo anotativo *son* sus vectores; no hay
+  fórmula que parametrizar. El **perfil** cae de este lado sin ser anotativo, y ya hay precedente:
+  ADR 0018 guarda el perfil vertical del muro como contorno.
+
+**Consecuencia de costo:** una familia 3D no es una fila de catálogo, es **un generador escrito
+por nosotros** más su esquema de parámetros. «La familia de escalera» significa el generador de
+escalera. Esto encarece la regla de emparejamiento y hay que presupuestarlo por bloque.
+
+### Cargar es copiar; vincular es otra cosa
+
+Al cargar una familia, su definición **entra al proyecto** y viaja con él. Así el `.axon` lleva
+sólo lo cargado —nunca la biblioteca entera— y sigue siendo autocontenido: enlazar dejaría los
+elementos huérfanos al abrir el archivo en otra máquina.
+
+Ver otro `.axon` **por referencia** es una función distinta y está parked arriba.
+
+### Dónde vive la biblioteca, sin romper ADR 0021
+
+Las imprescindibles viajan en el `.axon`; las complementarias viven en base de datos. Eso es
+legal porque **la familia es un componente, no la fuente de verdad**: el motor conoce un puerto
+abstracto de fuente de familias —listar, traer por id— y los adaptadores viven fuera, en
+`apps/web`. `packages/*` no sabe que existe una BD ni el CRM anfitrión. El paquete local para
+quien no tenga CRM sale gratis: es otro adaptador del mismo puerto.
+
+### Versiones: dos tipos de archivo, una sola línea
+
+Proyecto y familia son **dos tipos de archivo**, cada uno con su `formatVersion`, pero sobre
+**una sola línea de versión compartida** en vez de dos numeraciones con tabla de compatibilidad:
+al cargar, la familia se copia dentro del proyecto y sus datos *son* datos del proyecto. Mantener
+dos numeraciones para algo que acaba fusionado es coste sin beneficio.
+
+- **Hacia atrás, obligatorio:** una familia v1 en un proyecto v5 **se migra a v5** al cargarse.
+- **Hacia adelante, prohibido:** una familia v5 **no abre** en un lector v1. Leer a medias lo que
+  no se entiende corrompe en silencio.
+
+Ya hay base: el lector sube `.axon` v1 → v2 en memoria
+([`parse.ts`](../../packages/persistence/src/parse.ts)) y el lector normal rechaza versiones no
+soportadas ([`shape.ts`](../../packages/persistence/src/shape.ts)).
+
+**Deuda detectada al decidir esto (DEUDA-VER-1):** `parseDocumentRecover` —la ruta de *Recuperar
+copia*— ante un `formatVersion` desconocido avisa `treating as 2` y **continúa**. Salvar un
+archivo dañado del pasado es correcto; salvar uno del **futuro** descarta en silencio lo que no
+entiende. Debe negarse igual que el lector normal. Arreglo pequeño; entra con FAM-1.
 
 ---
 

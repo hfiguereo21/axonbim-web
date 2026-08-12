@@ -7,7 +7,7 @@ alwaysApply: true
 
 1. **Lee docs aplicables** (`AGENTS.md` + `docs/…` del índice) antes de cambios materiales. No reinventes contratos documentados; ver `docs/product/doc-governance.md`.
 2. **Alcance explícito.** No amplíes la tarea. Mejoras → anotar y pedir autorización aparte.
-3. **Una sola cola, un bloque a la vez.** Plan antes de empezar, integrado en el único orden de `docs/roadmap/pending-work.md` (reordenar por importancia si hace falta). **Nunca hilos en paralelo**; un PR abierto sin mergear cuenta como hilo abierto. Aplica a producto, docs, infraestructura y deuda.
+3. **Una sola cola, un bloque a la vez.** Plan antes de empezar, integrado en el único orden de `docs/roadmap/pending-work.md` (reordenar por importancia si hace falta). **Nunca hilos en paralelo**; un PR abierto sin mergear cuenta como hilo abierto. Aplica a producto, docs, infraestructura y deuda. **Ninguna herramienta entra en la cola sin su familia delante** (la familia es prerrequisito del bloque, no una tarea suya).
 4. **Evidencia antes de arreglar** fallos runtime. No inventes la causa.
 5. **Detente al cumplir el objetivo** y en cada gate (`docs/roadmap/gates.md`). F5-S y F8 (o1 + CI + o2) aprobados. No IFC/OCCT/Edit Mode sin auth (WP-v1 + SK-v1 cerrados).
 6. **Ramas:** flujo Kaoru permitido (`feat/…`, PRs), pero **el agente no crea ramas sin instrucción explícita** del dueño; ante *create-branch* de la UI no pedido, rechazar y avisar (`docs/roadmap/github.md`, regla `40-git-and-scope`).

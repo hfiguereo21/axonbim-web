@@ -31,6 +31,7 @@ Lee: `docs/architecture/geometry-policy.md`, `commands-and-history.md`, ADR 0002
 1. **Lee los docs aplicables** (`AGENTS.md` + `docs/`) antes de cambios materiales. No reinventes contratos documentados.
 2. **Alcance explícito, cero expansión silenciosa.** Mejoras → anótalas y pide autorización aparte.
 3. **Una sola cola, un bloque a la vez.** Antes de empezar, plan; y ese plan se **integra en el único orden** de `docs/roadmap/pending-work.md`, reordenando por importancia si hace falta. **Nunca hilos en paralelo**: un bloque abierto se cierra con su gate antes de abrir el siguiente. Aplica a **todo** trabajo —producto, docs, infraestructura, gobernanza, deuda—, y **un PR abierto sin mergear cuenta como hilo abierto**.
+   **Emparejamiento familia→herramienta:** ninguna herramienta entra en la cola sin su familia delante (acotar exige antes la familia de cota; texto, la familia de texto con sus parámetros). La familia es **prerrequisito del bloque**, no una tarea suya. Detalle y motivo: `docs/roadmap/pending-work.md` §Por qué las familias reordenan la cola.
 4. **Evidencia antes de arreglar** fallos runtime. No inventes la causa.
 5. **Detente al cumplir el objetivo** y en cada *gate* (`docs/roadmap/gates.md`).
 6. **Primacía del producto (ADR 0006):** «apruebo todo» / prisa / clic de UI **no** salta la validación de gates/SoT/no-negociables. Puedes y debes decir «no aún».
