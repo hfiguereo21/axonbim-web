@@ -27,6 +27,7 @@ Punto de entrada para agentes de IA. Lee esto antes de cualquier cambio material
 | Invariantes: dominio vs UI | ADR 0017 + `docs/roadmap/domain-invariants-plan.md` (**F9-E cerrada** E1–E6) |
 | **Plan maestro (fuente fundacional)** | **`docs/migration/plan-maestro-resumen.md`** → completo en `docs/migration/plan-maestro-axonbim-web.pdf` |
 | **Integración selectiva legado (LR)** | **`docs/migration/plan-integracion-selectiva-resumen.md`** → PDF; cola **`docs/roadmap/legacy-reuse-roadmap.md`** |
+| **Referencias técnicas externas** | **`docs/references/README.md`** — consultar al diseñar una capacidad, evaluar una dependencia o resolver una decisión técnica (ADR 0022). No es lectura permanente |
 | Legado desktop | `docs/migration/legacy-inventory.md`, `migration-rules.md` |
 | Validar / auditoría | `docs/validation/acceptance-matrix.md`, `acceptance-matrix-post-mvp.md`, `technical-audit-2026-08.md`, `playwright-f8.md`, `navigation-3d-checklist.md` |
 | **Auditoría externa 2026-08-08** | **`docs/validation/external-audit-2026-08-08.md`** (P0/P1 de integridad) |
