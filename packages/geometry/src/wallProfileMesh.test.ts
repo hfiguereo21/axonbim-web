@@ -63,7 +63,7 @@ describe("wallProfileMesh", () => {
     for (let i = 0; i < mesh.positions.length; i += 3) {
       const x = mesh.positions[i]!;
       const z = mesh.positions[i + 2]!;
-      if (Math.abs(x - 0) < 1e-4) maxZAtU0 = Math.max(maxZAtU0, z);
+      if (Math.abs(x) < 1e-4) maxZAtU0 = Math.max(maxZAtU0, z);
       if (Math.abs(x - 4) < 1e-4) maxZAtU4 = Math.max(maxZAtU4, z);
     }
     expect(maxZAtU0).toBeCloseTo(3, 3);

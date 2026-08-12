@@ -6,7 +6,10 @@ import type { SketchProfile } from "@axonbim/tools";
 /** Closed result outline seeded from a host — do not append Línea onto it. */
 export function isClosedResultSeed(profile: SketchProfile | null): boolean {
   return (
-    !!profile &&
+    // `profile !== null` y no `Boolean(profile)`: TypeScript estrecha el tipo
+    // con la comparación explícita, no con la llamada a Boolean, y sin eso los
+    // tres accesos de abajo son "possibly null".
+    profile !== null &&
     profile.closed &&
     profile.semantic !== "axes" &&
     profile.edges.length >= 3

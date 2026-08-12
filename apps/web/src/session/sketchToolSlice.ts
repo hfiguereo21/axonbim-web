@@ -848,9 +848,9 @@ export const createSketchToolSlice: SessionSliceCreator<{
   wallClick: (raw, forceOrtho = false) => {
     const s = get();
     const modifyLive =
-      !!s.sketchTarget &&
-      !!s.sketchProfile &&
-      !!s.sketchModifyMode &&
+      Boolean(s.sketchTarget) &&
+      Boolean(s.sketchProfile) &&
+      Boolean(s.sketchModifyMode) &&
       s.sketchModifyMode !== "vertex" &&
       s.sketchModifyMode !== "redraw";
     // H1: Modificar must work even if ribbon left activeTool on "select".

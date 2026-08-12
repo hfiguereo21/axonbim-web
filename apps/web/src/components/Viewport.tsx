@@ -589,18 +589,18 @@ export function Viewport() {
       // H1: Modificar / sketch provisional before selection fallthrough
       // (activeTool may briefly be "select" while sketchTarget is still set).
       const sketchModifyLive =
-        !!s.sketchTarget &&
-        !!s.sketchProfile &&
+        Boolean(s.sketchTarget) &&
+        Boolean(s.sketchProfile) &&
         s.sketchModifyMode !== "vertex" &&
         s.sketchModifyMode !== "redraw";
       const sketchWall =
-        !!s.sketchTarget && !!s.sketchProfile && s.activeTool === "wall";
+        Boolean(s.sketchTarget) && Boolean(s.sketchProfile) && s.activeTool === "wall";
 
       /** H4: surface missed Workplane picks instead of silent return. */
       const reportWpMiss = () => {
         if (
           shouldReportWorkplanePickMiss({
-            sketchTarget: !!s.sketchTarget,
+            sketchTarget: Boolean(s.sketchTarget),
             sketchModifyLive,
             activeTool: s.activeTool,
           })

@@ -323,9 +323,9 @@ function faceNormal(a: V3, b: V3, c: V3): V3 {
   const e2x = c.x - a.x;
   const e2y = c.y - a.y;
   const e2z = c.z - a.z;
-  let nx = e1y * e2z - e1z * e2y;
-  let ny = e1z * e2x - e1x * e2z;
-  let nz = e1x * e2y - e1y * e2x;
+  const nx = e1y * e2z - e1z * e2y;
+  const ny = e1z * e2x - e1x * e2z;
+  const nz = e1x * e2y - e1y * e2x;
   const L = Math.hypot(nx, ny, nz) || 1;
   return { x: nx / L, y: ny / L, z: nz / L };
 }

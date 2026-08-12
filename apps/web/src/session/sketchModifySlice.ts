@@ -262,7 +262,10 @@ export const createSketchModifySlice: SessionSliceCreator<{
         return;
       }
 
-      let next = s.sketchProfile;
+      // Sin inicializador: las cuatro ramas de abajo (copy, arista, vértice y
+      // el else) asignan `next` antes de usarlo, así que el valor inicial era
+      // código muerto.
+      let next: typeof s.sketchProfile;
       let label = "Perfil movido";
       if (mode === "copy") {
         next = copyProfileTranslated(s.sketchProfile, delta);
