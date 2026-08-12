@@ -24,3 +24,4 @@
 | [0020](0020-rule-precedence-kaoru.md) | Precedencia normativa Kaoru↔AxonBIM (proceso sí, arquitectura no) |
 | [0021](0021-engine-independent-of-crm.md) | El motor no depende del CRM (guard en `check:layers`) |
 | [0022](0022-technical-reference-governance.md) | Gobernanza de referencias técnicas externas (REF-0) |
+| [0023](0023-semver-with-kaoru-rules.md) | SemVer con reglas de Kaoru (excepción documentada a 0020) |

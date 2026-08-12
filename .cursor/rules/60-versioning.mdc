@@ -1,5 +1,5 @@
 ---
-description: Versionado — versión de producto (esquema Kaoru) separada del formatVersion del .axon.
+description: Versionado — SemVer con gobierno Kaoru (ADR 0023), separado del formatVersion del .axon.
 alwaysApply: false
 ---
 
@@ -7,7 +7,7 @@ alwaysApply: false
 
 Espejo de `CLAUDE.md` §6 (canónico).
 
-1. **Producto:** `v<MAJOR>.<MINOR>.<BUILD>` (esquema de Kaoru). MAJOR/MINOR manuales; BUILD derivado de git. *(Deuda: adaptar `dev:sync-version` de deno a un script pnpm.)*
+1. **Producto (ADR 0023):** **SemVer** `vMAJOR.MINOR.PATCH` con gobierno de Kaoru — MAJOR/MINOR manuales del dueño vía PR, en `VERSION`; **PATCH derivado de git** (`git rev-list --count vMAJOR.MINOR.0..main`). Sin prerelease antes de 1.0. Excepción documentada a ADR 0020. *(Deuda: `dev:sync-version` a pnpm.)*
 2. **Datos:** el `.axon formatVersion` (entero monotónico) es **independiente** del versionado de producto y se mantiene. **v2 vigente** (`Wall.vertical`, ADR 0018); los lectores rechazan versiones futuras desconocidas.
 
 No confundir ambos: uno versiona el binario/app, el otro la compatibilidad del archivo.
