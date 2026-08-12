@@ -21,6 +21,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # Historial completo, no el shallow por defecto: el guard de
+          # fast-forward de abajo necesita tener el commit ANTERIOR en el
+          # checkout para comparar. Con depth 1 nunca esta, el guard falla
+          # cerrado ("no se puede verificar") y todo push a main sale rojo
+          # sin que nada este mal. Se descubrio en el primer push a main
+          # posterior a que el guard existiera: su unica corrida historica.
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
