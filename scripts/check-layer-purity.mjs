@@ -184,6 +184,17 @@ for (const file of engineFiles) {
   if (KAORU.sql.test(bare)) {
     problems.push(`${file}: contiene SQL embebido — ${KAORU.why}`);
   }
+
+  // Especificador calculado: `const p = "re" + "act"; await import(p)` evade
+  // TODA verificacion de arriba, porque el guard lee texto y el nombre del
+  // modulo no existe hasta ejecutarlo. No se puede resolver estaticamente, asi
+  // que se prohibe la forma: hoy no hay ni un import dinamico con variable en
+  // packages/ — medido, no supuesto — y en un motor puro no hay razon para uno.
+  if (/\bimport\s*\(\s*(?!["'`])/.test(bare)) {
+    problems.push(
+      `${file}: import dinamico con especificador calculado — no es verificable, usa un literal`,
+    );
+  }
 }
 
 if (problems.length > 0) {

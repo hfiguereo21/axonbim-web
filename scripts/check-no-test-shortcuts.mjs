@@ -11,9 +11,16 @@ import { execFileSync } from "node:child_process";
 import { readFileSync, statSync } from "node:fs";
 
 const PATTERNS = [
-  { re: /\b(?:describe|it|test)\.skip\s*\(/, why: "test deshabilitado (.skip)" },
-  { re: /\b(?:describe|it|test)\.only\s*\(/, why: "suite reducida a .only" },
-  { re: /\b(?:describe|it|test)\.todo\s*\(/, why: "test declarado pero no escrito (.todo)" },
+  // `\s*` alrededor del punto: `it . skip(` evadia el patron original. Nadie lo
+  // escribe por descuido — justamente por eso hay que cazarlo.
+  { re: /\b(?:describe|it|test)\s*\.\s*skip\s*\(/, why: "test deshabilitado (.skip)" },
+  { re: /\b(?:describe|it|test)\s*\.\s*only\s*\(/, why: "suite reducida a .only" },
+  { re: /\b(?:describe|it|test)\s*\.\s*todo\s*\(/, why: "test declarado pero no escrito (.todo)" },
+  // Acceso con corchetes: `it["skip"](...)` es lo mismo con otra sintaxis.
+  {
+    re: /\b(?:describe|it|test)\s*\[\s*["'`](?:skip|only|todo)["'`]\s*\]/,
+    why: "test deshabilitado por acceso con corchetes",
+  },
   { re: /\b(?:xit|xdescribe)\s*\(/, why: "test deshabilitado (xit/xdescribe)" },
   { re: /@ts-ignore/, why: "error de tipos silenciado (@ts-ignore)" },
   { re: /@ts-nocheck/, why: "archivo excluido del typecheck (@ts-nocheck)" },
