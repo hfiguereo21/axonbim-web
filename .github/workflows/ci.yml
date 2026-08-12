@@ -68,6 +68,9 @@ jobs:
       - name: Every workspace member is covered by the checks
         run: pnpm check:coverage
 
+      - name: The guards still catch what they forbid
+        run: pnpm check:guards
+
       - name: Typecheck
         run: pnpm typecheck
 

@@ -10,7 +10,7 @@
  * passed `pnpm test`, `pnpm typecheck` and `pnpm check:layers` at once.
  *
  * The layer guard has the same shape of hole from the other side: `LAYERS` in
- * check-layer-purity.mjs lists the packages it inspects, so a package nobody
+ * lib/guard-rules.mjs lists the packages it inspects, so a package nobody
  * added to a layer is never checked for domain purity. Only the ADR 0021 pass
  * sweeps `packages/*` wholesale.
  *
@@ -22,6 +22,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { LAYERS } from "./lib/guard-rules.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -71,14 +72,16 @@ for (const member of members) {
 
 /**
  * Segunda puerta: todo paquete bajo `packages/` tiene que estar nombrado por
- * alguna capa de check-layer-purity, o su pureza de dominio no se verifica.
+ * alguna capa, o su pureza de dominio no se verifica. Se importa LAYERS en vez
+ * de buscar el nombre en el texto del guard: el texto miente en cuanto las
+ * reglas se mueven de archivo — paso de verdad, y este chequeo lo cazo.
  */
-const layerSource = readFileSync(join(ROOT, "scripts/check-layer-purity.mjs"), "utf8");
+const inSomeLayer = new Set(LAYERS.flatMap((l) => l.packages));
 for (const member of members.filter((m) => m.startsWith("packages/"))) {
   const name = member.slice("packages/".length);
-  if (!new RegExp(`"${name}"`).test(layerSource)) {
+  if (!inSomeLayer.has(name)) {
     problems.push(
-      `${member}: ninguna capa de check-layer-purity.mjs lo nombra — su pureza no se verifica`,
+      `${member}: ninguna capa de lib/guard-rules.mjs lo nombra — su pureza no se verifica`,
     );
   }
 }
@@ -87,7 +90,7 @@ if (problems.length > 0) {
   console.error(`Miembros del workspace fuera de cobertura (${problems.length}):\n`);
   for (const p of problems) console.error(`  ${p}`);
   console.error(
-    "\nAgrega el script que falta, o la capa en check-layer-purity.mjs." +
+    "\nAgrega el script que falta, o la capa en lib/guard-rules.mjs." +
       " Un paquete sin cobertura deja el CI verde sin haberlo mirado.",
   );
   process.exit(1);
