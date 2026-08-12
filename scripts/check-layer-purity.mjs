@@ -60,6 +60,45 @@ const LAYERS = [
   },
 ];
 
+/**
+ * ADR 0021 — el motor no conoce al CRM anfitrión. Se aplica a `packages/*`
+ * entero, no sólo a viewer y tools: si `model` o `persistence` pudieran
+ * importar Kaoru, la promesa de extraer el motor sería falsa y el ADR no se
+ * sostendría. `apps/web` queda fuera a propósito: la capa adaptadora vive ahí.
+ */
+const KAORU = {
+  /** Alias de import del front de Kaoru y paquetes de su monorepo. */
+  specifiers: [
+    "@kaoru",
+    "$components",
+    "$hooks",
+    "$interceptors",
+    "$pages",
+    "$services",
+    "$signals",
+    "$sdui",
+    "devextreme",
+    "devextreme-react",
+    "hono",
+    "prisma",
+    "@prisma/client",
+    "pg",
+    "postgres",
+    "keycloak-js",
+  ],
+  /** Identidades del CRM. El motor persiste a `.axon`, no a un tenant. */
+  identifiers: [
+    "company_id",
+    "tenant_id",
+    "kc_subject",
+    "access_id",
+    "permission_interface",
+  ],
+  /** SQL embebido: la lógica del CRM vive en su base de datos, la del motor no. */
+  sql: /\b(?:SELECT\s+[\s\S]{1,200}?\sFROM\s|INSERT\s+INTO\s|UPDATE\s+[\w."]+\s+SET\s|CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s)/i,
+  why: "el motor no depende del CRM: ni auth, ni company_id, ni SQL (ADR 0021)",
+};
+
 const SOURCE = /\.(ts|tsx)$/;
 const SPECIFIER =
   /(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|^\s*import\s+)["']([^"']+)["']/gm;
@@ -72,6 +111,15 @@ function stripLiterals(code) {
     .replace(/`(?:\\.|[^`\\])*`/g, '""')
     .replace(/"(?:\\.|[^"\\])*"/g, '""')
     .replace(/'(?:\\.|[^'\\])*'/g, '""');
+}
+
+/**
+ * Remove comments but KEEP strings: `"company_id"` en un fetch es justamente el
+ * acoplamiento que se prohíbe, mientras que un comentario que diga «sin
+ * company_id» no lo es. `stripLiterals` no sirve aquí porque borra ambos.
+ */
+function stripComments(code) {
+  return code.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/\/\/[^\n]*/g, " ");
 }
 
 function matches(specifier, forbiddenEntry) {
@@ -114,6 +162,30 @@ for (const layer of LAYERS) {
   }
 }
 
+// ADR 0021 — independencia del motor frente al CRM anfitrión.
+const engineFiles = tracked.filter((f) => f.startsWith("packages/"));
+if (engineFiles.length === 0) {
+  problems.push("packages/: no hay fuentes trackeadas — el guard de ADR 0021 no verifica nada");
+}
+for (const file of engineFiles) {
+  const code = readFileSync(file, "utf8");
+
+  for (const m of code.matchAll(SPECIFIER)) {
+    const hit = KAORU.specifiers.find((f) => matches(m[1], f));
+    if (hit) problems.push(`${file}: importa "${m[1]}" — ${KAORU.why}`);
+  }
+
+  const bare = stripComments(code);
+  for (const id of KAORU.identifiers) {
+    if (new RegExp(`\\b${id}\\b`).test(bare)) {
+      problems.push(`${file}: nombra "${id}" — ${KAORU.why}`);
+    }
+  }
+  if (KAORU.sql.test(bare)) {
+    problems.push(`${file}: contiene SQL embebido — ${KAORU.why}`);
+  }
+}
+
 if (problems.length > 0) {
   console.error(`Violaciones de capa (${problems.length}):\n`);
   for (const p of problems) console.error(`  ${p}`);
@@ -124,4 +196,7 @@ if (problems.length > 0) {
   process.exit(1);
 }
 
-console.log(`Capas respetadas (${checked} archivos de dominio y viewer).`);
+console.log(
+  `Capas respetadas (${checked} archivos de dominio y viewer) e independencia del` +
+    ` motor verificada (${engineFiles.length} archivos de packages/, ADR 0021).`,
+);

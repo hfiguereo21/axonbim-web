@@ -16,4 +16,6 @@ Canónico: `CLAUDE.md` (estas reglas son su espejo). Lee: `docs/architecture/ove
 
 **Frontera con Kaoru CRM:** axonbim es **pnpm + Vite + TS puro, sin base de datos**. Las reglas Kaoru-específicas (las de su stack y su operación) **no aplican** aquí.
 
-Prohibido: portar Godot/Python/RPC; inventar segunda geometría divergente planta/3D.
+7. **El motor no depende del CRM (ADR 0021):** `packages/*` sin auth, sin `company_id`/`tenant_id`, sin SQL y sin alias del front de Kaoru. Persiste a `.axon` y debe correr sin el CRM; la conexión vive en una capa adaptadora en `apps/web`. Lo rompe el CI: `pnpm check:layers`.
+
+Prohibido: portar Godot/Python/RPC; inventar segunda geometría divergente planta/3D; acoplar `packages/*` al CRM.

@@ -22,3 +22,4 @@
 | [0018](0018-wall-vertical-profile.md) | Perfil vertical persistente de muro (`SK-wall-profile-v1` cerrado; `.axon` v2) |
 | [0019](0019-kaoru-branch-flow.md) | Flujo de ramas Kaoru (supersede «solo main» de 0006) |
 | [0020](0020-rule-precedence-kaoru.md) | Precedencia normativa Kaoru↔AxonBIM (proceso sí, arquitectura no) |
+| [0021](0021-engine-independent-of-crm.md) | El motor no depende del CRM (guard en `check:layers`) |

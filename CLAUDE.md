@@ -2,7 +2,7 @@
 
 Reglas nativas **canónicas** para agentes de IA en este repo. `.cursor/rules/*.mdc` es un **espejo**: al cambiar una regla, edita aquí primero y refleja allá. El detalle de dominio vive en `docs/` (índice al final vía `@AGENTS.md`), no en este archivo.
 
-> **Contexto de integración.** AxonBIM se integrará a **Kaoru CRM**, pero es un proyecto **distinto** y no se desvía de su propia arquitectura. Lo transversal va en §9. Las reglas Kaoru-específicas (database-centric/plpgsql, deno, promoción QA/DEV/PROD, Keycloak/MIVED) **NO aplican aquí**.
+> **Contexto de integración.** AxonBIM se integrará a un **CRM anfitrión**, pero es un proyecto **distinto** y no se desvía de su propia arquitectura. Lo transversal va en §9. Las reglas propias del anfitrión (su stack y su operación) **NO aplican aquí**.
 
 ## 1. Arquitectura e invariantes
 
@@ -21,8 +21,10 @@ Lee: `docs/architecture/overview.md`, `docs/product/non-negotiables.md`, `docs/d
 - **React UI:** dispara *tools/commands*, no escribe `walls[]` ni el documento a mano. Zustand solo para **sesión** (herramienta, preview, cámara, paneles). Una función no está terminada si no se puede usar desde la interfaz.
 - **Three.js viewer:** meshes/edges se **derivan** del documento vía geometry; picking → IDs → capa tools/commands; cambiar cámara/vista **no** muta el documento; el preview de herramienta es efímero y fuera del historial.
 
-Prohibido: SoT en React state; verdad del edificio en `Object3D.userData`; saltarse el historial "para ir más rápido".
-Lee: `docs/architecture/geometry-policy.md`, `commands-and-history.md`, ADR 0002.
+- **Motor vs CRM (ADR 0021):** `packages/*` no depende de nada de Kaoru — ni auth, ni `company_id`/`tenant_id`, ni SQL, ni alias de su front. El motor persiste a `.axon` y debe poder correr sin el CRM; toda la conexión vive en una **capa adaptadora afuera** (`apps/web`). Lo verifica `pnpm check:layers` en CI, no la buena voluntad.
+
+Prohibido: SoT en React state; verdad del edificio en `Object3D.userData`; saltarse el historial "para ir más rápido"; acoplar `packages/*` al CRM.
+Lee: `docs/architecture/geometry-policy.md`, `commands-and-history.md`, ADR 0002, ADR 0021.
 
 ## 3. Método de trabajo del agente
 
