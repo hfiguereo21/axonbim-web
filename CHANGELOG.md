@@ -2,6 +2,33 @@
 
 ## Unreleased
 
+## [v0.1.0] — 2026-08-12
+
+Primera línea base con nombre. **`0.x` significa inestable**: el contrato puede
+cambiar entre versiones menores, y este corte no promete lo contrario.
+
+### Qué es
+
+El estado tras cerrar F0–F9, la línea LR, los Workplanes v1/v2 y
+`SK-wall-profile-v1`, más la gobernanza documental de agosto: precedencia
+normativa (ADR 0020), independencia del motor frente al CRM anfitrión con guard
+en CI (ADR 0021), biblioteca de referencias técnicas (ADR 0022) y este esquema
+de versionado (ADR 0023).
+
+### Limitaciones conocidas
+
+- **Edición del perfil de muro: mínimamente funcional.** El rechazo de una
+  edición inválida no explica qué regla se violó ni dónde; no existe operación
+  que añada aristas al contorno, sólo transformar las existentes; y el snap
+  resuelve cuatro casos. Especificado en
+  `docs/references/pilots/wall-profile-reference-study.md`. El refactor no está
+  hecho.
+- **IFC, DXF, OpenCascade, Edit Mode, Push/Pull y losas**: fuera de alcance,
+  cada uno con su gate.
+- El motor viaja embebido en el CRM anfitrión como SPA independiente; su
+  extracción está garantizada por ADR 0021 pero no ejercitada.
+
+
 ### SK-UX-A/B — feedback, política Dibujar y aristas (2026-08-10)
 
 - **A:** snap cue + guía en UV del Workplane con provisional activo; preview Modificar
