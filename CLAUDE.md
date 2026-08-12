@@ -56,7 +56,7 @@ Remoto: `docs/roadmap/github.md`.
 
 ## 6. Versionado
 
-- **Producto:** `v<MAJOR>.<MINOR>.<BUILD>` (esquema de Kaoru). MAJOR/MINOR manuales; BUILD derivado de git. *(Deuda: adaptar `dev:sync-version` a un script pnpm equivalente.)*
+- **Producto (ADR 0023):** **SemVer** `vMAJOR.MINOR.PATCH` con el **gobierno de Kaoru** — MAJOR/MINOR manuales del dueño vía PR (viven en `VERSION`, formato `MAJOR.MINOR`); **PATCH derivado de git**: `git rev-list --count vMAJOR.MINOR.0..main`. Antes de 1.0 sin sufijos de prerelease: `0.x` ya significa inestable. Es **excepción documentada** a ADR 0020, que no se extiende a ninguna otra materia. *(Deuda: adaptar `dev:sync-version` a un script pnpm equivalente.)*
 - **Datos:** el `.axon formatVersion` (entero monotónico) es **independiente** del anterior y se mantiene: **v2 vigente** (`Wall.vertical`, ADR 0018); los lectores rechazan versiones futuras desconocidas.
 
 ## 7. Tests y validación
