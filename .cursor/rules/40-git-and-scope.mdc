@@ -1,23 +1,27 @@
 ---
-description: Git y alcance — solo main por defecto; commits claros; sin ramas sin autorización explícita.
+description: Git y alcance — flujo de ramas Kaoru; el agente no crea ramas sin instrucción; commits sin Co-Authored-By; sin secretos.
 alwaysApply: true
 ---
 
 # Git y alcance
 
-1. Commits con mensaje que explique el **porqué**; un tema por commit cuando sea posible.
+Espejo de `CLAUDE.md` §4–§5 (canónico).
+
+1. Commits con mensaje que explique el **porqué**; un tema por commit; pequeños y enfocados. **No incluir `Co-Authored-By: Claude …`** (se firma solo con el autor humano).
 2. Presupuesto orientativo: pocos archivos; no tocar no relacionados.
-3. Sin sync destructivo (`force` a main, hard reset) sin pedido explícito.
-4. No empujar secretos. Remoto principal: GitHub (`docs/roadmap/github.md`).
-5. Microtareas: terminar, reportar, esperar siguiente autorización en gates.
+3. Sin sync destructivo (`force` a main, hard reset) sin pedido explícito. No `--no-verify`/`--no-gpg-sign` salvo pedido explícito.
+4. Microtareas: terminar, reportar, esperar siguiente autorización en gates.
 
-## Protección: solo `main` (dueño en solitario)
+## Ramas
 
-El autor trabaja **solo en `main`** salvo autorización explícita de rama.
+Se permite el flujo de Kaoru: `feat/…`, `fix/…`, `hotfix/…`, `chore/…`, `docs/…`, `test/…` + PRs.
 
-1. **No crear** ramas nuevas (`checkout -b`, `switch -c`, acciones diff-tab *create-branch*, prefijo `cursor/…`) sin frase explícita del usuario en el chat (p. ej. «autorizo crear la rama X» / «crea la rama X»).
-2. Si la UI de Cursor pide *create-branch-and-commit* u otra acción que cree rama: **no crear la rama**; quedarse o volver a `main`, avisar en una frase, y solo entonces commit/push en `main` si el usuario también pidió commit/push.
-3. «Continúa», aprobar un plan de producto, o autorizar un ADR **no** autoriza crear rama.
-4. Colaboradores / PR: solo cuando el usuario lo pida de forma explícita (ver `docs/roadmap/github.md`).
+1. **El agente NO crea ramas sin instrucción explícita del dueño en el chat** (p. ej. «crea la rama X»). El humano decide cuándo se ramifica; la IA no improvisa.
+2. Si la UI de Cursor pide *create-branch-and-commit* u otra acción que cree rama sin que el usuario lo pidiera: **no crear la rama**; avisar en una frase y operar donde indique el usuario.
+3. «Continúa», aprobar un plan de producto, o autorizar un ADR **no** autoriza crear rama por cuenta propia.
 
-Prohibido: mezclar historial del desktop; commits basura “WIP” con secretos; ramas de trabajo espontáneas “por costumbre”.
+## Secretos
+
+El remoto `origin` es **público**. No empujar secretos en commits, logs ni docs. `.env` / claves PEM/KEY van ignorados y nunca al remoto. Ante un secreto a punto de subirse: detente y avisa. Remoto: `docs/roadmap/github.md`.
+
+Prohibido: mezclar historial del desktop; commits “WIP” con secretos; ramas creadas por el agente sin que se lo pidan.

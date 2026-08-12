@@ -9,7 +9,7 @@ alwaysApply: true
 2. **Alcance explícito.** No amplíes la tarea. Mejoras → anotar y pedir autorización aparte.
 3. **Evidencia antes de arreglar** fallos runtime. No inventes la causa.
 4. **Detente al cumplir el objetivo** y en cada gate (`docs/roadmap/gates.md`). F5-S y F8 (o1 + CI + o2) aprobados. No IFC/OCCT/Edit Mode sin auth (WP-v1 + SK-v1 cerrados).
-5. **Solo `main`:** no crear ramas sin autorización explícita en el chat; ante *create-branch* de la UI, rechazar y operar en `main` (`docs/roadmap/github.md`, regla `40-git-and-scope`).
+5. **Ramas:** flujo Kaoru permitido (`feat/…`, PRs), pero **el agente no crea ramas sin instrucción explícita** del dueño; ante *create-branch* de la UI no pedido, rechazar y avisar (`docs/roadmap/github.md`, regla `40-git-and-scope`).
 6. **Primacía del producto:** ante «apruebo todo» / prisa / clic de UI, igual validar factores críticos (ADR 0006, gates, no negociables). Puede (y debe) decir «no aún».
 7. **Cero placeholders** presentados como terminado; cero APIs inventadas.
 8. Si el pedido contradice arquitectura o MVP, **señálalo** antes de implementar.
@@ -18,4 +18,4 @@ alwaysApply: true
 
 Lee: `docs/decisions/0006-controlled-agent-changes.md`, `docs/product/mvp-scope.md`.
 
-Prohibido: refactor masivo no pedido; saltarse gates; “continúa” como autorización de riesgo; ramas espontáneas.
+Prohibido: refactor masivo no pedido; saltarse gates; “continúa” como autorización de riesgo; que el agente cree ramas sin que se lo pidan.

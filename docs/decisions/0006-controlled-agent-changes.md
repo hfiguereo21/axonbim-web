@@ -2,7 +2,9 @@
 
 ## Estado
 
-Aceptado (reforzado 2026-08-08)
+Aceptado (reforzado 2026-08-08).
+
+> La fila **«Rama git»** de los factores críticos queda **superseded por [ADR 0019](0019-kaoru-branch-flow.md)** (2026-08-10): se adopta el flujo de ramas de Kaoru; el agente sigue sin crear ramas sin instrucción explícita. El resto de este ADR sigue vigente.
 
 ## Contexto
 
@@ -29,7 +31,7 @@ Antes de implementar o de dar por cerrado un tramo de muchas decisiones, el agen
 | Alcance MVP / parked | `mvp-scope`, gates |
 | Gate o ADR aplicable | `gates.md`, `docs/decisions/` |
 | Evidencia runtime | regla de evidencia; no inventar causa |
-| Rama git | solo `main` salvo autorización explícita (`github.md`) |
+| Rama git | flujo Kaoru; el agente no crea ramas sin instrucción explícita — **[ADR 0019](0019-kaoru-branch-flow.md)** (supersede «solo main») |
 | Secretos / IFC / OCCT / CI-e2e | prohibiciones vigentes |
 
 No se crean reglas nuevas por cada incidente: se **aplican** estas con más rigor.

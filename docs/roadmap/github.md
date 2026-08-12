@@ -152,14 +152,16 @@ Regla operativa: `.cursor/rules/40-git-and-scope.mdc`. Primacía del producto so
 
 ## Git vs PR (uso diario)
 
-### Solo tú, solo `main`
+### Flujo de ramas (ADR 0019)
 
-Con **git** basta:
+> **Actualizado 2026-08-10 ([ADR 0019](../decisions/0019-kaoru-branch-flow.md)):** se abandona «solo `main`» y se adopta el flujo de ramas de Kaoru (`feat/…`, `fix/…`, PRs). **El agente no crea ramas sin instrucción explícita del dueño.**
+
+Para cambios directos del dueño en `main`, con **git** basta:
 
 1. Cambios locales → `commit`
 2. `git push` / `git pull` en `main`
 
-No hace falta Pull Request (PR).
+Para trabajo por feature (o antes de tocar `main`): rama `feat/…` + PR (ver abajo). No hace falta PR para un cambio trivial propio en `main`.
 
 ### Qué es un PR
 

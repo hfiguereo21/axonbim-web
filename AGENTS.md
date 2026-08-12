@@ -4,12 +4,12 @@ Punto de entrada para agentes de IA. Lee esto antes de cualquier cambio material
 
 ## Cómo trabajar aquí
 
-1. **Lee las reglas activas** en `.cursor/rules/` (mandatos cortos).
+1. **Lee las reglas activas.** Canónicas en **`CLAUDE.md`** (raíz); `.cursor/rules/*.mdc` es su espejo para Cursor (mandatos cortos).
 2. **Lee la documentación de soporte** bajo `docs/` para el dominio que toques. El detalle vive en docs, no en las rules. Política: `docs/product/doc-governance.md`.
 3. **No copies ni traduzcas** el desktop Godot/Python. Portar = comportamiento → prueba → invariante → especificación → implementación nueva. Ver `docs/migration/migration-rules.md`.
 4. **F5-S cerrado** (2026-08-07). **F8 o1 / F8-CI / o2 aprobados** (2026-08-08) — ver `docs/validation/playwright-f8.md`. No IFC/OCCT/Edit Mode/losas sin auth. Sketch: **SK-wall-profile-v1 cerrado** (Bloques 0–7; `.axon` v2).
 5. **No dupliques controles UI** (cinta vs status vs opciones) salvo petición explícita. Ver `docs/ui/interface-base.md` (anti-redundancia).
-6. **Solo `main` por defecto.** No crear ramas (`cursor/…`, diff-tab create-branch, etc.) sin frase explícita del usuario. Detalle: `docs/roadmap/github.md` + regla `40-git-and-scope`.
+6. **Ramas:** flujo Kaoru permitido (`feat/…`, PRs), pero **el agente no crea ramas sin frase explícita del usuario** (ante `cursor/…` / diff-tab create-branch no pedido: rechazar y avisar). Detalle: `docs/roadmap/github.md` + regla `40-git-and-scope`.
 7. **Primacía del producto** (ADR 0006): «apruebo todo» no salta validación estricta de gates / SoT / evidencia.
 
 ## Índice de lectura
@@ -49,7 +49,7 @@ Punto de entrada para agentes de IA. Lee esto antes de cualquier cambio material
 - Expansión silenciosa: terminar la tarea, proponer mejoras aparte, esperar autorización.
 - Borrar o debilitar pruebas para hacer pasar CI.
 - Recrear decisiones documentadas sin demostrar que el contrato vigente es insuficiente.
-- Crear ramas de trabajo sin autorización explícita en el chat (protección “solo main”).
+- Que el agente cree ramas sin frase explícita del usuario (el flujo de ramas lo dispara el humano, no la IA).
 
 ## Comandos
 

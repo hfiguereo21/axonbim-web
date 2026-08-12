@@ -12,6 +12,8 @@ alwaysApply: true
 5. **Dominio sin browser/UI:** model/commands/geometry no importan React, Three, DOM ni APIs de almacenamiento del navegador.
 6. **IFC y OpenCascade** fuera del MVP salvo autorización y ADR.
 
-Lee: `docs/architecture/overview.md`, `docs/product/non-negotiables.md`, `docs/decisions/`.
+Canónico: `CLAUDE.md` (estas reglas son su espejo). Lee: `docs/architecture/overview.md`, `docs/product/non-negotiables.md`, `docs/decisions/`.
+
+**Frontera con Kaoru CRM:** axonbim es **pnpm + Vite + TS puro, sin base de datos**. Las reglas Kaoru-específicas (las de su stack y su operación) **no aplican** aquí.
 
 Prohibido: portar Godot/Python/RPC; inventar segunda geometría divergente planta/3D.

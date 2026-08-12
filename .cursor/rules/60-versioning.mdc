@@ -1,0 +1,13 @@
+---
+description: Versionado — versión de producto (esquema Kaoru) separada del formatVersion del .axon.
+alwaysApply: false
+---
+
+# Versionado
+
+Espejo de `CLAUDE.md` §6 (canónico).
+
+1. **Producto:** `v<MAJOR>.<MINOR>.<BUILD>` (esquema de Kaoru). MAJOR/MINOR manuales; BUILD derivado de git. *(Deuda: adaptar `dev:sync-version` de deno a un script pnpm.)*
+2. **Datos:** el `.axon formatVersion` (entero monotónico) es **independiente** del versionado de producto y se mantiene. **v2 vigente** (`Wall.vertical`, ADR 0018); los lectores rechazan versiones futuras desconocidas.
+
+No confundir ambos: uno versiona el binario/app, el otro la compatibilidad del archivo.

@@ -35,3 +35,9 @@ e2e/.auth/
 # Local agent / tooling noise
 .cursor/tmp/
 *.local
+
+# Kaoru CRM — archivos de referencia locales, nunca versionar
+gitignore.txt
+
+# Claude Code — workspace local por-desarrollador (launch, settings, historial)
+/.claude/
