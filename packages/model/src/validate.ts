@@ -9,11 +9,16 @@
  *
  * Hosted-opening fit/overlap: see `openingFit.ts` (F9-E2).
  */
-import { MIN_THICKNESS, MIN_WALL_LENGTH } from "@axonbim/shared";
+import { type IssueLocation, MIN_THICKNESS, MIN_WALL_LENGTH } from "@axonbim/shared";
 import type { AxonDocument, Camera, Door, ViewCrop, Wall, Window } from "./types.js";
 import { validateWallVerticalDefinition } from "./wallVertical.js";
 
-export type ValidationIssue = { code: string; message: string };
+export type ValidationIssue = {
+  code: string;
+  message: string;
+  /** Optional offending vertex/edge, so the UI can point at it (SK-R1). */
+  where?: IssueLocation;
+};
 
 /** `null` means valid. */
 export type ValidationResult = ValidationIssue | null;
@@ -99,21 +104,38 @@ export function validateWall(wall: Wall, refs: DocumentRefs): ValidationResult {
   return null;
 }
 
+const OPENING_CODES = {
+  door: {
+    idInvalid: "door.id.invalid",
+    wallUnknown: "door.wall.unknown",
+    familyUnknown: "door.family.unknown",
+  },
+  window: {
+    idInvalid: "window.id.invalid",
+    wallUnknown: "window.wall.unknown",
+    familyUnknown: "window.family.unknown",
+  },
+} as const;
+
 function validateOpening(
   opening: Door | Window,
   kind: "door" | "window",
   wallIds: ReadonlySet<string>,
   familyIds: ReadonlySet<string>,
 ): ValidationResult {
+  // Literal codes, never composed: a code built as `${kind}.family.unknown` is
+  // invisible to grep and to the SK-R1 guard, so the rejection surface stops
+  // being enumerable — by a script or by a person.
+  const codes = OPENING_CODES[kind];
   if (!isNonEmptyString(opening?.id)) {
-    return issue(`${kind}.id.invalid`, `${kind}.id required`);
+    return issue(codes.idInvalid, `${kind}.id required`);
   }
   const at = `${kind} ${opening.id}`;
   if (!wallIds.has(opening.wallId)) {
-    return issue(`${kind}.wall.unknown`, `${at}: unknown wallId`);
+    return issue(codes.wallUnknown, `${at}: unknown wallId`);
   }
   if (!familyIds.has(opening.familyId)) {
-    return issue(`${kind}.family.unknown`, `${at}: unknown familyId`);
+    return issue(codes.familyUnknown, `${at}: unknown familyId`);
   }
   if (!isFiniteNum(opening.width) || opening.width <= 0) {
     return issue(`${kind}.width.invalid`, `${at}: width must be greater than 0`);

@@ -9,6 +9,7 @@ import {
   MIN_WALL_LENGTH,
   SNAP_TOLERANCE,
   almostEqual,
+  type IssueLocation,
   type Vec3,
 } from "@axonbim/shared";
 import {
@@ -28,8 +29,12 @@ export type WallAxisFrame = {
   ny: number;
 };
 
-function issue(code: string, message: string): NonNullable<ValidationResult> {
-  return { code, message };
+function issue(
+  code: string,
+  message: string,
+  where?: IssueLocation,
+): NonNullable<ValidationResult> {
+  return where ? { code, message, where } : { code, message };
 }
 
 /** Plan length of the wall axis (XY). */
@@ -291,16 +296,23 @@ export function validateWallProfile(
   for (let i = 0; i < loop.length; i++) {
     const p = loop[i]!;
     if (!Number.isFinite(p.u) || !Number.isFinite(p.v)) {
-      return issue("profile.nonFinite", `profile vertex ${i} is not finite`);
+      return issue("profile.nonFinite", `profile vertex ${i} is not finite`, {
+        at: "vertex",
+        index: i,
+      });
     }
     if (p.u < -SNAP_TOLERANCE || p.u > wallLen + SNAP_TOLERANCE) {
       return issue(
         "profile.u.bounds",
         `profile vertex ${i}: u must be within [0, ${wallLen}]`,
+        { at: "vertex", index: i },
       );
     }
     if (p.v < -SNAP_TOLERANCE) {
-      return issue("profile.v.belowBase", `profile vertex ${i}: v below wall base`);
+      return issue("profile.v.belowBase", `profile vertex ${i}: v below wall base`, {
+        at: "vertex",
+        index: i,
+      });
     }
   }
 
@@ -309,12 +321,17 @@ export function validateWallProfile(
     const b = loop[(i + 1) % loop.length]!;
     const len = Math.hypot(b.u - a.u, b.v - a.v);
     if (len < EPS_LENGTH) {
-      return issue("profile.duplicateVertex", `profile has duplicate consecutive vertices at ${i}`);
+      return issue(
+        "profile.duplicateVertex",
+        `profile has duplicate consecutive vertices at ${i}`,
+        { at: "vertex", index: i },
+      );
     }
     if (len < MIN_WALL_LENGTH) {
       return issue(
         "profile.edge.short",
         `profile edge ${i} shorter than ${MIN_WALL_LENGTH} m`,
+        { at: "edge", index: i },
       );
     }
   }

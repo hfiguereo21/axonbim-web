@@ -27,10 +27,24 @@ La validación **sabe** exactamente qué está mal y **no lo dice**. Medido:
 
 | | |
 |---|---|
-| Códigos que emite la validación | 11 — `profile.selfIntersection`, `profile.duplicateVertex`, `profile.vertexCount`, `profile.nonFinite`, `profile.wallLength`, `profile.area`, `profile.ends`, `opening.outsideProfile`, `opening.verticalFit`, `opening.endMargin`, `opening.overlap` |
-| Códigos que la UI traduce | 5 de esos 11 |
-| Los otros 6 | caen en el `??` de `documentMutation.ts:46` y salen como `"Operación rechazada: <mensaje interno>"` |
-| Traducciones huérfanas | 3 — `profile.u.bounds`, `profile.edge.short`, `profile.height.min`: la UI las traduce y **nadie las emite** |
+| Códigos que emite la validación | **41**, medidos por el guardia de SK-R1 |
+| Códigos que la UI traduce | **24 de 41**; los 17 restantes llegaban sin copia |
+| Traducciones huérfanas | **0** |
+
+> **Corrección 2026-08-13 (SK-R1).** La versión original de esta tabla decía
+> «11 emitidos, 5 traducidos, 3 huérfanos». Los tres números eran falsos y se
+> corrigen con la medición real:
+>
+> - El conteo de 11 sólo miró `profile.*` y `opening.*`; la superficie incluye
+>   además `wall.*`, `door.*`, `window.*`, `camera.*` y `crop.*`.
+> - Los tres supuestos huérfanos —`profile.u.bounds`, `profile.edge.short`,
+>   `profile.height.min`— **sí se emiten**, en `packages/model/src/wallVertical.ts`.
+> - Faltaba el defecto más grave: `commitSketchProfile` no pasaba por la tabla
+>   de copia, así que toda la validación de `geometry` esquivaba la superficie.
+>
+> La lección para el método REF-0 (ADR 0022) es que **una cifra de diagnóstico
+> se mide con un script y se deja reproducible**, no se cuenta a mano: el guardia
+> `rejectionCoverage.test.ts` recalcula estos números en cada CI.
 
 Consecuencia observada por el dueño: *«hay que jugar a ver cuál sketch es
 aceptado»*. Un usuario final no sabría por dónde empezar.
@@ -148,7 +162,7 @@ expresa en `AxonDocument`, Commands y Workplanes.
 
 **Validación y su superficie**
 
-- Cada uno de los 11 códigos produce un mensaje con regla, ubicación y remedio.
+- Cada código produce un mensaje con regla, ubicación y remedio.
 - Ningún código llega sin traducir: un test que recorra los códigos emitidos y
   falle si alguno cae en el genérico.
 - Ninguna traducción huérfana: falla si la UI traduce un código que nadie emite.

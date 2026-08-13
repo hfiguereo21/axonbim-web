@@ -29,7 +29,7 @@ import {
 import { MIN_THICKNESS, MIN_WALL_LENGTH } from "@axonbim/shared";
 import { profileToAxes, profileToPoints, type SketchProfile } from "@axonbim/tools";
 import { patchViewsAfterDocumentChange } from "./cameraViews.js";
-import { applyCommandToSession } from "./documentMutation.js";
+import { applyCommandToSession, rejectionStatus } from "./documentMutation.js";
 import type { SessionState } from "./sliceTypes.js";
 import { worldRingToWallVertical } from "./worldRingToWallVertical.js";
 
@@ -234,7 +234,10 @@ export function commitSketchProfile(get: Get, set: Set): CommitSketchProfileResu
     thickness: template.thickness,
   });
   if (!validated.ok) {
-    set({ status: validated.message });
+    // Through `rejectionStatus`, not the raw message: this path used to bypass
+    // the copy table, so every geometry rule reached the user without a remedy
+    // and outside the surface the guard checks (SK-R1).
+    set({ status: rejectionStatus(validated.code, validated.message) });
     return commitFail(sourceIds[0] ?? null);
   }
 
