@@ -7,15 +7,16 @@ alwaysApply: true
 
 1. **Lee docs aplicables** (`AGENTS.md` + `docs/…` del índice) antes de cambios materiales. No reinventes contratos documentados; ver `docs/product/doc-governance.md`.
 2. **Alcance explícito.** No amplíes la tarea. Mejoras → anotar y pedir autorización aparte.
-3. **Evidencia antes de arreglar** fallos runtime. No inventes la causa.
-4. **Detente al cumplir el objetivo** y en cada gate (`docs/roadmap/gates.md`). F5-S y F8 (o1 + CI + o2) aprobados. No IFC/OCCT/Edit Mode sin auth (WP-v1 + SK-v1 cerrados).
-5. **Ramas:** flujo Kaoru permitido (`feat/…`, PRs), pero **el agente no crea ramas sin instrucción explícita** del dueño; ante *create-branch* de la UI no pedido, rechazar y avisar (`docs/roadmap/github.md`, regla `40-git-and-scope`).
-6. **Primacía del producto:** ante «apruebo todo» / prisa / clic de UI, igual validar factores críticos (ADR 0006, gates, no negociables). Puede (y debe) decir «no aún».
-7. **Cero placeholders** presentados como terminado; cero APIs inventadas.
-8. Si el pedido contradice arquitectura o MVP, **señálalo** antes de implementar.
-9. Si código, tests, docs o ADR discrepan, **identifica la discrepancia** antes de un cambio arquitectónico.
-10. Documentación permanente nueva/movida/eliminada → **actualiza el índice** en `AGENTS.md` en la misma tarea.
-11. **Precedencia normativa (ADR 0020):** normas acumulativas (las de este repo + las de Kaoru). Ante contradicción prevalece la **preexistente de Kaoru**, solo en **proceso y gobernanza**; el stack y la arquitectura se rigen por §1–§2 y ADR 0001–0002, y cambiarlos exige ADR propio. Nunca relaja una norma más estricta de axonbim (§5: remoto público). Consecuencia directa: **no proponer ni ejecutar despliegues** a servidores; `localhost` por defecto.
+3. **Una sola cola, un bloque a la vez.** Plan antes de empezar, integrado en el único orden de `docs/roadmap/pending-work.md` (reordenar por importancia si hace falta). **Nunca hilos en paralelo**; un PR abierto sin mergear cuenta como hilo abierto. Aplica a producto, docs, infraestructura y deuda. **Ninguna herramienta entra en la cola sin su familia delante** (la familia es prerrequisito del bloque, no una tarea suya).
+4. **Evidencia antes de arreglar** fallos runtime. No inventes la causa.
+5. **Detente al cumplir el objetivo** y en cada gate (`docs/roadmap/gates.md`). F5-S y F8 (o1 + CI + o2) aprobados. No IFC/OCCT/Edit Mode sin auth (WP-v1 + SK-v1 cerrados).
+6. **Ramas:** flujo Kaoru permitido (`feat/…`, PRs), pero **el agente no crea ramas sin instrucción explícita** del dueño; ante *create-branch* de la UI no pedido, rechazar y avisar (`docs/roadmap/github.md`, regla `40-git-and-scope`).
+7. **Primacía del producto:** ante «apruebo todo» / prisa / clic de UI, igual validar factores críticos (ADR 0006, gates, no negociables). Puede (y debe) decir «no aún».
+8. **Cero placeholders** presentados como terminado; cero APIs inventadas.
+9. Si el pedido contradice arquitectura o MVP, **señálalo** antes de implementar.
+10. Si código, tests, docs o ADR discrepan, **identifica la discrepancia** antes de un cambio arquitectónico.
+11. Documentación permanente nueva/movida/eliminada → **actualiza el índice** en `AGENTS.md` en la misma tarea.
+12. **Precedencia normativa (ADR 0020):** normas acumulativas (las de este repo + las de Kaoru). Ante contradicción prevalece la **preexistente de Kaoru**, solo en **proceso y gobernanza**; el stack y la arquitectura se rigen por §1–§2 y ADR 0001–0002, y cambiarlos exige ADR propio. Nunca relaja una norma más estricta de axonbim (§5: remoto público). Consecuencia directa: **no proponer ni ejecutar despliegues** a servidores; `localhost` por defecto.
 
 Lee: `docs/decisions/0006-controlled-agent-changes.md`, `docs/product/mvp-scope.md`.
 
