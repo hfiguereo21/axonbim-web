@@ -102,7 +102,11 @@ describe("documentMutation (corte 7c)", () => {
     if (out.mutated) return;
     expect(out.rejected).toBe(true);
     expect(out.patch.status).not.toBe(NO_MUTATION_STATUS);
-    expect(out.patch.status).toBe("Altura de muro por debajo del mínimo (0,05 m)");
+    // SK-R1: naming the rule is necessary but not sufficient — the status must
+    // also tell the user what to change.
+    expect(out.patch.status).toBe(
+      "Altura de muro por debajo del mínimo (0,05 m). Cómo resolverlo: Sube la altura a 0,05 m o más",
+    );
     expect(history.canUndo).toBe(false);
   });
 
@@ -112,14 +116,19 @@ describe("documentMutation (corte 7c)", () => {
     );
   });
 
-  it("SK-UX-A: maps profile.* rejection codes to Spanish", () => {
-    expect(rejectionStatus("profile.ends", "tech")).toMatch(/extremos/i);
-    expect(rejectionStatus("profile.selfIntersection", "tech")).toMatch(
-      /autointersect/i,
-    );
-    expect(rejectionStatus("wall.profile.heightLocked", "tech")).toMatch(
-      /perfil custom/i,
-    );
+  it("SK-UX-A: maps profile.* rejection codes to Spanish, each with a remedy", () => {
+    // SK-R1 rewrote two of these away from jargon on purpose: "se autointersecta"
+    // and "perfil custom" named the rule in language the drawer does not use.
+    // What each assertion still guarantees is the rule plus a way out.
+    for (const [code, rule] of [
+      ["profile.ends", /extremos/i],
+      ["profile.selfIntersection", /se cruza consigo mismo/i],
+      ["wall.profile.heightLocked", /perfil vertical propio/i],
+    ] as const) {
+      const text = rejectionStatus(code, "tech");
+      expect(text).toMatch(rule);
+      expect(text).toContain("Cómo resolverlo:");
+    }
   });
 
   it("keeps redo available when a command is rejected", () => {

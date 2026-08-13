@@ -9,7 +9,9 @@ encaja en la secuencia y si desplaza a otra cosa; si es más importante, **se re
 en vez de abrirlo aparte. **Nunca hilos en paralelo** — un PR abierto sin mergear ya es un hilo
 abierto (`CLAUDE.md` §3.3).
 
-Última revisión: **2026-08-12** — **SK-wall-profile-v1 cerrado pero mínimamente funcional**.
+Última revisión: **2026-08-13** — **SK-R1 cerrada**. Siguiente: **FAM-1**.
+
+Contexto previo: **SK-wall-profile-v1 cerrado pero mínimamente funcional**.
 El dueño lo declara insuficiente para producto final; el piloto REF-0 mide por qué y esta cola
 descompone el refactor en fases. Siguiente hilo: **SK-R1…SK-R5**, y solo después
 losas / terreno / barridos u Edit Mode. ADR 0018, 0022.
@@ -31,7 +33,7 @@ prerrequisito. Cada bloque = frase explícita en chat + gate.
 
 ```
 LR0–LR3 + WP + SK-* + SK-profile-one + SK-wall-profile-v1
-  → SK-R1 rechazo explicable
+  → SK-R1 rechazo explicable ✔
   → FAM-1 concepto de familia + árbol maqueta
   → SK-R2 ADR sustrato de edición
   → FAM-2 biblioteca, carga y copia
@@ -62,16 +64,16 @@ el siguiente. Nada de hilos en paralelo.
 | — | **SK-profile** + **SK-replace v0** | **cerrada** 2026-08-09 | Provisional libre; replace Delete+Create |
 | — | **SK-profile-one** | **cerrada** 2026-08-10 | Anti silueta→N muros; **no** perfil vertical persistente |
 | — | **SK-wall-profile-v1** | **cerrada** 2026-08-10 | ADR 0018; `.axon` v2; Bloques 0–7 |
-| **1** | **SK-R1** Superficie de rechazo explicable | auth | Los 11 códigos con regla, ubicación y remedio; 2 tests guardia |
-| **2** | **FAM-1** Concepto de familia + árbol maqueta | tras SK-R1 | Un solo tipo `Family`: categoría · tipología · parámetros · versión. Árbol declarado completo con los nodos sin realizar marcados. `.axon` v3 + migración v2→v3 |
-| **3** | **SK-R2** ADR del sustrato de edición | tras FAM-1 | Decisión escrita: dibujo · transformación · snap · planos como base común, **con la familia de perfil como entrada de primera clase** |
-| **4** | **FAM-2** Biblioteca, carga y copia | tras SK-R2 | Puerto de fuente de familias en el motor, adaptadores fuera (BD / paquete local). Cargar **copia** al proyecto; el `.axon` nunca lleva la biblioteca entera |
-| **5** | **SK-R3** Sesión de edición compartida | tras SK-R2 | Una sesión única que consumen todas las funciones, no lógica por función |
-| **6** | **SK-R4** Trazado incremental | tras SK-R3 | Componer contorno arista a arista; hoy ninguna operación añade aristas |
-| **7** | **LR1-C** Snaps geométricos | tras SK-R4 | midpoint · intersección · perpendicular · tangente (hoy: 4 casos) |
-| **8** | **SK-R5** Parámetros de operación | tras LR1-C | Radio de fillet y distancia de offset dejan de ser constantes |
-| **9** | **FAM-4** Familias compuestas | tras SK-R5 | Una familia anida familias y declara reglas entre partes: escalera → tramos + baranda; baranda → pasamanos + balaustres/paños + soportes |
-| **10** | **Sketch → losas / terreno / barridos** u **Edit Mode** | auth, **tras SK-R3** | Frase explícita; no IFC/OCCT. Escalera y baranda exigen además FAM-4 |
+| — | **SK-R1** Superficie de rechazo explicable | **cerrada** 2026-08-13 | Los **41** códigos con regla, ubicación y remedio; guardias de cobertura y de huérfanos, probados por mutación |
+| **1** | **FAM-1** Concepto de familia + árbol maqueta | tras SK-R1 | Un solo tipo `Family`: categoría · tipología · parámetros · versión. Árbol declarado completo con los nodos sin realizar marcados. `.axon` v3 + migración v2→v3 |
+| **2** | **SK-R2** ADR del sustrato de edición | tras FAM-1 | Decisión escrita: dibujo · transformación · snap · planos como base común, **con la familia de perfil como entrada de primera clase** |
+| **3** | **FAM-2** Biblioteca, carga y copia | tras SK-R2 | Puerto de fuente de familias en el motor, adaptadores fuera (BD / paquete local). Cargar **copia** al proyecto; el `.axon` nunca lleva la biblioteca entera |
+| **4** | **SK-R3** Sesión de edición compartida | tras SK-R2 | Una sesión única que consumen todas las funciones, no lógica por función |
+| **5** | **SK-R4** Trazado incremental | tras SK-R3 | Componer contorno arista a arista; hoy ninguna operación añade aristas |
+| **6** | **LR1-C** Snaps geométricos | tras SK-R4 | midpoint · intersección · perpendicular · tangente (hoy: 4 casos) |
+| **7** | **SK-R5** Parámetros de operación | tras LR1-C | Radio de fillet y distancia de offset dejan de ser constantes |
+| **8** | **FAM-4** Familias compuestas | tras SK-R5 | Una familia anida familias y declara reglas entre partes: escalera → tramos + baranda; baranda → pasamanos + balaustres/paños + soportes |
+| **9** | **Sketch → losas / terreno / barridos** u **Edit Mode** | auth, **tras SK-R3** | Frase explícita; no IFC/OCCT. Escalera y baranda exigen además FAM-4 |
 
 **No existe FAM-3, y el hueco es deliberado.** Ocupaba «definir las familias base» y se eliminó:
 las familias concretas **no son un bloque**, llegan emparejadas con su herramienta (ver la regla
@@ -101,16 +103,22 @@ qué **no** se reutiliza · tests. Tras: archivos · tests · Undo/Redo si aplic
 
 ### Próximo paso
 
-**SK-R1 — superficie de rechazo explicable.** Es la fase de mayor alivio por unidad de
-trabajo y la única que **no depende del sustrato**, así que puede ir primero:
+**SK-R1 cerrada 2026-08-13.** Siguiente: **FAM-1 — concepto de familia y árbol maqueta**,
+que requiere frase explícita:
 
-> Autorizo SK-R1.
+> Autorizo FAM-1.
 
-El problema, medido en
-[`../references/pilots/wall-profile-reference-study.md`](../references/pilots/wall-profile-reference-study.md):
-la validación emite **11 códigos** y la UI traduce **5**; los otros caen en un genérico
-«Operación rechazada». Hay además **3 traducciones huérfanas** de códigos que nadie emite.
-El usuario acaba adivinando qué contorno se acepta.
+**Lo que SK-R1 dejó medido, y no coincide con el piloto.** La superficie real son **41
+códigos**, de los que **17 no tenían copia** — no 11 y 5. El defecto de fondo no era el
+conteo sino que `commitSketchProfile` **esquivaba la tabla de copia**, así que toda la
+validación de `geometry` llegaba al usuario sin remedio. La ubicación (vértice/arista) ya
+se calculaba y se perdía en `rejected()`. Corregido el piloto; el guardia
+`rejectionCoverage.test.ts` recalcula la cifra en cada CI para que no vuelva a estimarse
+a mano.
+
+**Queda abierto de SK-R1:** el mensaje dice dónde está el fallo, pero la vista todavía no
+lo **resalta**. El marco visible de la restricción que pidió el dueño depende del sustrato
+compartido y entra con SK-R3.
 
 **Por qué el refactor va antes de losas/terreno/barridos.** Esas funciones consumirían las
 mismas herramientas de dibujo, transformación y snap. Abrirlas sobre el sustrato actual
