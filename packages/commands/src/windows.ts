@@ -1,6 +1,7 @@
 import type { AxonDocument, DoorLeafState, DoorSwing, Window } from "@axonbim/model";
 import { documentRefs, validateWindow } from "@axonbim/model";
 import { checkHostedOpening } from "./hostedOpening";
+import { restoreAt } from "./restoreOrder";
 import { CHANGED, NOOP, rejected, type Command, type CommandResult } from "./types";
 
 let windowSeq = 0;
@@ -56,15 +57,17 @@ export class DeleteWindowCommand implements Command {
   readonly id: string;
   readonly type = "window.delete";
   private snapshot: Window | null = null;
+  private index = 0;
 
   constructor(private readonly windowId: string) {
     this.id = `cmd.window.delete.${windowId}`;
   }
 
   execute(doc: AxonDocument): CommandResult {
-    const found = doc.windows.find((w) => w.id === this.windowId);
-    if (!found) return notFound(this.windowId);
-    this.snapshot = { ...found };
+    const index = doc.windows.findIndex((w) => w.id === this.windowId);
+    if (index < 0) return notFound(this.windowId);
+    this.snapshot = { ...doc.windows[index] };
+    this.index = index;
     doc.windows = doc.windows.filter((w) => w.id !== this.windowId);
     doc.meta.updatedAt = new Date().toISOString();
     return CHANGED;
@@ -72,7 +75,7 @@ export class DeleteWindowCommand implements Command {
 
   undo(doc: AxonDocument): void {
     if (!this.snapshot) return;
-    doc.windows.push({ ...this.snapshot });
+    restoreAt(doc.windows, this.index, { ...this.snapshot });
     doc.meta.updatedAt = new Date().toISOString();
   }
 }
