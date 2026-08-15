@@ -1,4 +1,4 @@
-import type { AxonDocument, Wall, WallVerticalDefinition } from "@axonbim/model";
+import type { AxonDocument, Door, Wall, WallVerticalDefinition, Window } from "@axonbim/model";
 import {
   asOpeningSpec,
   cloneWallVertical,
@@ -12,6 +12,7 @@ import {
   wallVerticalEquals,
   wallVerticalFromHeight,
 } from "@axonbim/model";
+import { restoreAll, restoreAt, snapshotRemoved, type Removed } from "./restoreOrder";
 import { CHANGED, NOOP, rejected, type Command, type CommandResult } from "./types";
 
 export type { Command } from "./types";
@@ -78,26 +79,38 @@ export class DeleteWallCommand implements Command {
   readonly id: string;
   readonly type = "wall.delete";
   private snapshot: Wall | null = null;
-  private doorSnapshots: AxonDocument["doors"] = [];
-  private windowSnapshots: AxonDocument["windows"] = [];
+  private index = 0;
+  private doorSnapshots: Removed<Door>[] = [];
+  private windowSnapshots: Removed<Window>[] = [];
 
   constructor(private readonly wallId: string) {
     this.id = `cmd.delete.${wallId}`;
   }
 
   execute(doc: AxonDocument): CommandResult {
-    const found = doc.walls.find((w) => w.id === this.wallId);
-    if (!found) return notFound(this.wallId);
+    const index = doc.walls.findIndex((w) => w.id === this.wallId);
+    if (index < 0) return notFound(this.wallId);
+    const found = doc.walls[index];
     this.snapshot = {
       ...found,
       p1: { ...found.p1 },
       p2: { ...found.p2 },
       vertical: cloneWallVertical(found.vertical),
     };
-    this.doorSnapshots = doc.doors.filter((d) => d.wallId === this.wallId).map((d) => ({ ...d }));
-    this.windowSnapshots = doc.windows
-      .filter((w) => w.wallId === this.wallId)
-      .map((w) => ({ ...w }));
+    this.index = index;
+    // Openings of this wall can sit anywhere in the arrays, so each one keeps
+    // its own index: undo has to interleave them back among the openings of
+    // the walls that were never deleted.
+    this.doorSnapshots = snapshotRemoved(
+      doc.doors,
+      (d) => d.wallId === this.wallId,
+      (d) => ({ ...d }),
+    );
+    this.windowSnapshots = snapshotRemoved(
+      doc.windows,
+      (w) => w.wallId === this.wallId,
+      (w) => ({ ...w }),
+    );
     doc.walls = doc.walls.filter((w) => w.id !== this.wallId);
     doc.doors = doc.doors.filter((d) => d.wallId !== this.wallId);
     doc.windows = doc.windows.filter((w) => w.wallId !== this.wallId);
@@ -107,14 +120,20 @@ export class DeleteWallCommand implements Command {
 
   undo(doc: AxonDocument): void {
     if (!this.snapshot) return;
-    doc.walls.push({
+    restoreAt(doc.walls, this.index, {
       ...this.snapshot,
       p1: { ...this.snapshot.p1 },
       p2: { ...this.snapshot.p2 },
       vertical: cloneWallVertical(this.snapshot.vertical),
     });
-    for (const d of this.doorSnapshots) doc.doors.push({ ...d });
-    for (const w of this.windowSnapshots) doc.windows.push({ ...w });
+    restoreAll(
+      doc.doors,
+      this.doorSnapshots.map(({ index, item }) => ({ index, item: { ...item } })),
+    );
+    restoreAll(
+      doc.windows,
+      this.windowSnapshots.map(({ index, item }) => ({ index, item: { ...item } })),
+    );
     doc.meta.updatedAt = new Date().toISOString();
   }
 }

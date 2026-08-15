@@ -5,6 +5,7 @@ import {
   normalizeViewCrop,
   validateCamera,
 } from "@axonbim/model";
+import { restoreAt } from "./restoreOrder";
 import { CHANGED, NOOP, rejected, type Command, type CommandResult } from "./types";
 
 let cameraSeq = 0;
@@ -79,15 +80,17 @@ export class DeleteCameraCommand implements Command {
   readonly id: string;
   readonly type = "camera.delete";
   private snapshot: Camera | null = null;
+  private index = 0;
 
   constructor(private readonly cameraId: string) {
     this.id = `cmd.delete.${cameraId}`;
   }
 
   execute(doc: AxonDocument): CommandResult {
-    const found = doc.cameras.find((c) => c.id === this.cameraId);
-    if (!found) return notFound(this.cameraId);
-    this.snapshot = snapshotCamera(found);
+    const index = doc.cameras.findIndex((c) => c.id === this.cameraId);
+    if (index < 0) return notFound(this.cameraId);
+    this.snapshot = snapshotCamera(doc.cameras[index]);
+    this.index = index;
     doc.cameras = doc.cameras.filter((c) => c.id !== this.cameraId);
     doc.meta.updatedAt = new Date().toISOString();
     return CHANGED;
@@ -96,7 +99,7 @@ export class DeleteCameraCommand implements Command {
   undo(doc: AxonDocument): void {
     if (!this.snapshot) return;
     if (!doc.cameras.some((c) => c.id === this.snapshot!.id)) {
-      doc.cameras.push(snapshotCamera(this.snapshot));
+      restoreAt(doc.cameras, this.index, snapshotCamera(this.snapshot));
     }
     doc.meta.updatedAt = new Date().toISOString();
   }

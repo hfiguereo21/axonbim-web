@@ -1,6 +1,7 @@
 import type { AxonDocument, Door, DoorLeafState, DoorSwing } from "@axonbim/model";
 import { documentRefs, validateDoor } from "@axonbim/model";
 import { checkHostedOpening } from "./hostedOpening";
+import { restoreAt } from "./restoreOrder";
 import { CHANGED, NOOP, rejected, type Command, type CommandResult } from "./types";
 
 let doorSeq = 0;
@@ -56,15 +57,17 @@ export class DeleteDoorCommand implements Command {
   readonly id: string;
   readonly type = "door.delete";
   private snapshot: Door | null = null;
+  private index = 0;
 
   constructor(private readonly doorId: string) {
     this.id = `cmd.door.delete.${doorId}`;
   }
 
   execute(doc: AxonDocument): CommandResult {
-    const found = doc.doors.find((d) => d.id === this.doorId);
-    if (!found) return notFound(this.doorId);
-    this.snapshot = { ...found };
+    const index = doc.doors.findIndex((d) => d.id === this.doorId);
+    if (index < 0) return notFound(this.doorId);
+    this.snapshot = { ...doc.doors[index] };
+    this.index = index;
     doc.doors = doc.doors.filter((d) => d.id !== this.doorId);
     doc.meta.updatedAt = new Date().toISOString();
     return CHANGED;
@@ -72,7 +75,7 @@ export class DeleteDoorCommand implements Command {
 
   undo(doc: AxonDocument): void {
     if (!this.snapshot) return;
-    doc.doors.push({ ...this.snapshot });
+    restoreAt(doc.doors, this.index, { ...this.snapshot });
     doc.meta.updatedAt = new Date().toISOString();
   }
 }
